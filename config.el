@@ -10,6 +10,11 @@
 ;; suggestions as an issue on GitHub project of this file.
 ;;======================================================================
 
+;; Some configurations to get inspired.
+;; https://zzamboni.org/post/my-doom-emacs-configuration-with-commentary/
+;; https://dotdoom.rgoswami.me/config.html
+;; https://emacs.zdx.cat/
+
 ;;----------------------------------------------------------------------
 ;; http://www.emacswiki.org/wiki/EmacsNiftyTricks
 ;; “I’ve used Emacs for many years now, but have never reached its
@@ -93,6 +98,7 @@
 (show-paren-mode 1)                 ;; Highlight matching pairs.
 (delete-selection-mode 1)           ;; Allows delete region.
 (recentf-mode 1)                    ;; List of recently opened files.
+(global-auto-revert-mode 1)         ;; Refresh buffer if file changes.
 
 (setq column-number-mode t)         ;; Show cursor position.
 (setq auto-save-default nil)        ;; Turn off #autosave#.
@@ -112,6 +118,8 @@
 ;; (setq doom-variable-pitch-font
 ;;       (font-spec :family "Noto Sans" :size 12))
 (setq doom-themes-treemacs-enable-variable-pitch nil)
+
+
 
 ;;----------------------------------------------------------------------
 ;; Key bindings.
@@ -188,11 +196,11 @@
   (set-default-font "Ubuntu Mono-14")))
 
 ;;----------------------------------------------------------------------
+;; Configures `company'.
 
 (use-package! company
   :bind
   ("C-*" . company-complete))
-;; (define-key company-active-map (kbd "C-*") 'company-complete)
 
 ;;----------------------------------------------------------------------
 ;; Magit.
@@ -230,30 +238,6 @@
     (global-set-key (kbd "<S-f3>")
                     'bmkp-toggle-temporary-bookmark)
     ))
-
-;;----------------------------------------------------------------------
-;; Auto complete mode for Emacs.
-;; https://www.emacswiki.org/emacs/AutoComplete
-
-;; (use-package! auto-complete
-;;   :config
-;;   (use-package! auto-complete-config)
-;;   (ac-config-default)
-;;   (setq ac-delay 0.02
-;;         ac-auto-start 0)
-;;   (setq ac-use-quick-help nil
-;;         ac-quick-help-delay 1.)
-;;   (setq ac-use-menu-map t)
-;;   (setq ac-dwim t)
-;;   (setq ac-fuzzy-enable t)
-;;   (setq-default ac-sources '(ac-source-abbrev
-;;                              ac-source-dictionary
-;;                              ac-source-words-in-same-mode-buffers))
-;;   ;; Change 'ac-complete from ENTER to TAB.
-;;   ;; (ac-set-trigger-key "TAB")
-;;   (define-key ac-completing-map "\r" nil)
-;;   (define-key ac-completing-map "\t" 'ac-complete)
-;;   )
 
 ;;----------------------------------------------------------------------
 ;; Visible bookmarks. Easy movement.
@@ -331,6 +315,9 @@
 ;;----------------------------------------------------------------------
 ;; ESS - Emacs Speaks Statistics.
 ;; http://ess.r-project.org/
+
+;; Automatically connecting to remote R sessions in Emacs using ESS
+;; https://www.dcalacci.net/2018/remote-ess/
 
 (use-package! ess
   :init
@@ -570,4 +557,3 @@
   (add-to-list 'hl-todo-keyword-faces '("WALMES"    . hl-todo-good-words)))
 
 ;;----------------------------------------------------------------------
-;; My mapping.

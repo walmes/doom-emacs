@@ -31,7 +31,7 @@ git clone git@github.com:walmes/doom-emacs.git ~/.doom.d/
 #    "~/.doom.d/essh.el")
 #   (byte-compile-file "~/.doom.d/essh.el"))
 
-# Requirements for `python` modele.
+# Requirements for `python` module.
 # https://github.com/hlissner/doom-emacs/tree/develop/modules/lang/python
 #   cd anaconda
 #   source activate
@@ -43,9 +43,11 @@ git clone git@github.com:walmes/doom-emacs.git ~/.doom.d/
 #   M-x lsp-install-server RET mspyls
 # https://github.com/microsoft/pyright
 
+# Requirements for `(cc +lsp)` module.
+# sudo apt-get install clangd-10
+
 # Requirements for `ess` module.
 LIB="/usr/lib/R/site-library"
 REPOS="http://cran-r.c3sl.ufpr.br/"
-PKG="lintr"
-CMD="lib <- \"$LIB\"; repos <- \"$REPOS\"; install.packages(\"$PKG\", dependencies = TRUE, lib = lib, repos = repos)"
+CMD="lib <- \"$LIB\"; repos <- \"$REPOS\"; install.packages(c(\"lintr\", \"languageserver\"), dependencies = TRUE, lib = lib, repos = repos)"
 sudo Rscript -e "$CMD"
