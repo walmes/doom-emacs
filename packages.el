@@ -61,7 +61,8 @@
 (package! orgalist)
 (package! elpy)
 (package! imenu-list)
-(package! auto-complete)
+;; (package! auto-complete)
+(package! auctex)
 
 (package! bookmark+
   :recipe (:host github
