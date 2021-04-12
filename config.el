@@ -109,6 +109,10 @@
 (setq whitespace-line-column fill-column)
 (setq whitespace-style '(face lines-tail trailing tabs empty))
 
+;; (setq doom-variable-pitch-font
+;;       (font-spec :family "Noto Sans" :size 12))
+(setq doom-themes-treemacs-enable-variable-pitch nil)
+
 ;;----------------------------------------------------------------------
 ;; Key bindings.
 ;;----------------------------------------------------------------------
@@ -304,6 +308,7 @@
 ;; https://www.emacswiki.org/emacs/download/essh.el
 
 ;; Download.
+;; (require 'package)
 ;; (package-initialize)
 ;; (when (not (package-installed-p 'essh))
 ;;   (url-copy-file
@@ -379,7 +384,8 @@
    '(lambda ()
       ;;-------------------------------------
       (require 'ess-site)
-      (auto-complete-mode -1)
+      ;; (auto-complete-mode -1)
+      (flycheck-mode nil)        ;; Disable flycheck/lintr.
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
       (ess-toggle-underscore nil)
@@ -407,6 +413,7 @@
 ;; https://github.com/walmes/electric-spacing (fork).
 
 ;; Download.
+;; (require 'package)
 ;; (package-initialize)
 ;; (when (not (package-installed-p 'electric-spacing-r))
 ;;   (url-copy-file
