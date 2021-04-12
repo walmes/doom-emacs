@@ -184,6 +184,13 @@
   (set-default-font "Ubuntu Mono-14")))
 
 ;;----------------------------------------------------------------------
+
+(use-package! company
+  :bind
+  ("C-*" . company-complete))
+;; (define-key company-active-map (kbd "C-*") 'company-complete)
+
+;;----------------------------------------------------------------------
 ;; Magit.
 
 (use-package! magit
@@ -224,9 +231,25 @@
 ;; Auto complete mode for Emacs.
 ;; https://www.emacswiki.org/emacs/AutoComplete
 
-(use-package! auto-complete
-  :config
-  (ac-config-default))
+;; (use-package! auto-complete
+;;   :config
+;;   (use-package! auto-complete-config)
+;;   (ac-config-default)
+;;   (setq ac-delay 0.02
+;;         ac-auto-start 0)
+;;   (setq ac-use-quick-help nil
+;;         ac-quick-help-delay 1.)
+;;   (setq ac-use-menu-map t)
+;;   (setq ac-dwim t)
+;;   (setq ac-fuzzy-enable t)
+;;   (setq-default ac-sources '(ac-source-abbrev
+;;                              ac-source-dictionary
+;;                              ac-source-words-in-same-mode-buffers))
+;;   ;; Change 'ac-complete from ENTER to TAB.
+;;   ;; (ac-set-trigger-key "TAB")
+;;   (define-key ac-completing-map "\r" nil)
+;;   (define-key ac-completing-map "\t" 'ac-complete)
+;;   )
 
 ;;----------------------------------------------------------------------
 ;; Visible bookmarks. Easy movement.
@@ -356,6 +379,7 @@
    '(lambda ()
       ;;-------------------------------------
       (require 'ess-site)
+      (auto-complete-mode -1)
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
       (ess-toggle-underscore nil)
@@ -459,8 +483,12 @@
 ;;----------------------------------------------------------------------
 ;; Latex extensions.
 
+;; Disable `latex' module because it brings a bug related to
+;; fontification. Since I'm not using LaTeX frequetly these days,
+;; enabling just AUCTex is enougth.
+;; https://www.reddit.com/r/emacs/comments/g95vyl/font_lock_in_auctex_messed_up/
+
 (use-package! auctex
-  :defer nil
   :mode
   (("\\.pgf\\'" . latex-mode)
    ("\\.pgs\\'" . latex-mode))
@@ -474,38 +502,65 @@
 
 ;; http://lists.gnu.org/archive/html/emacs-orgmode/2010-09/txtb5ChQJCDny.txt
 ;; http://emacs.1067599.n5.nabble.com/Adding-keywords-for-font-lock-experts-td95645.html
-(make-face 'bad-words)
-(set-face-attribute 'bad-words nil
-                    :foreground "White"
-                    :background "Firebrick")
-(make-face 'good-words)
-(set-face-attribute 'good-words nil
-                    :foreground "LightSeaGreen"
-                    :background "White")
-(make-face 'caution-words)
-(set-face-attribute 'caution-words nil
-                    :foreground "OrangeRed"
-                    :background "LightGray")
 
 (dolist
     (mode '(fundamental-mode emacs-lisp-mode lisp-mode org-mode
             shell-mode sh-mode ess-mode ess-r-mode polymode-mode
             python-mode markdown-mode latex-mode TeX-mode
-            prog-mode web-mode html-mode css-mode yaml-mode js-mode))
+            prog-mode web-mode html-mode css-mode yaml-mode
+            js-mode))
   (setq font-lock-keywords-case-fold-search t)
   (font-lock-add-keywords
    mode
-   '(("\\<\\(IMPORTANT\\|ATTENTION\\|NOTE\\|OBS\\|TODO\\|BAD\\|STOP\\|PROBLEM\\|FAIL\\|DETAIL\\|CAUTION\\)\\>"
-      0 'caution-words t)
-     ("\\<\\(COMMENT\\|IMPROVE\\|REVIEW\\|TIP\\|REMEMBER\\|QUESTION\\|EXPLANATION\\|INTERESTING\\|HYPHOTESIS\\|CONCEPT\\|DISCUSSION\\)\\>"
-      0 'font-lock-constant-face t)
-     ("\\<\\(BUG\\|WARNING\\|DANGER\\|FIXME\\|ERROR\\)\\>"
-      0 'bad-words t)
-     ("\\(^\\|[[:space:]]\\)@[[:alnum:]_.]+\\>" ;; @walmes, @param, @return
-      0 'font-lock-function-name-face t)
-     ("\\<\\(DONE\\|GOOD\\|WALMES\\|SOLVED\\|SOLUTION\\|AMAZING\\|COOL\\|NICE\\|BRILLIANT\\)\\>"
-      0 'good-words t))
+   '(("\\(^\\|[[:space:]]\\)@[[:alnum:]_.]+\\>"
+      0 'font-lock-function-name-face t))
+   ;; @walmes, @param, @return
    ))
+
+;;----------------------------------------------------------------------
+;; hl-todo.
+
+(defface hl-todo-caution-words
+  '((t :foreground "OrangeRed"
+       :background "LightGray"
+       :inherit (hl-todo)))
+  "Face for highlighting the CAUTION keyword.")
+
+(defface hl-todo-good-words
+  '((t :foreground "LightSeaGreen"
+       :background "White"
+       :inherit (hl-todo)))
+  "Face for highlighting the GOOD/POSITIVE keyword.")
+
+(defface hl-todo-bad-words
+  '((t :foreground "White"
+       :background "Firebrick"
+       :inherit (hl-todo)))
+  "Face for highlighting the BAD/NEGATIVE keyword.")
+
+;; https://github.com/tarsius/hl-todo
+(use-package! hl-todo
+  :bind
+  ("C-c l m" . hl-todo-previous)
+  ("C-c l n" . hl-todo-next)
+  :config
+  (global-hl-todo-mode t)
+  (add-to-list 'hl-todo-keyword-faces '("IMPROVE"     font-lock-constant-face bold))
+  (add-to-list 'hl-todo-keyword-faces '("QUESTION"    font-lock-constant-face bold))
+  (add-to-list 'hl-todo-keyword-faces '("EXPLANATION" font-lock-constant-face bold))
+  (add-to-list 'hl-todo-keyword-faces '("COMMENT"     font-lock-keyword-face bold))
+  (add-to-list 'hl-todo-keyword-faces '("TIP"         font-lock-keyword-face bold))
+  (add-to-list 'hl-todo-keyword-faces '("DANGER"      error bold))
+  (add-to-list 'hl-todo-keyword-faces '("STOP"        error bold))
+  (add-to-list 'hl-todo-keyword-faces '("FAIL"        error bold))
+  (add-to-list 'hl-todo-keyword-faces '("IMPORTANT"   warning bold))
+  (add-to-list 'hl-todo-keyword-faces '("ATTENTION"   warning bold))
+  (add-to-list 'hl-todo-keyword-faces '("OBS"         warning bold))
+  (add-to-list 'hl-todo-keyword-faces '("PROBLEM"     warning bold))
+  (add-to-list 'hl-todo-keyword-faces '("DONE"        success bold))
+  (add-to-list 'hl-todo-keyword-faces '("GOOD"        success bold))
+  (add-to-list 'hl-todo-keyword-faces '("SOLVED"      success bold))
+  (add-to-list 'hl-todo-keyword-faces '("WALMES"    . hl-todo-good-words)))
 
 ;;----------------------------------------------------------------------
 ;; My mapping.
