@@ -384,6 +384,14 @@
       (define-key ess-mode-map [C-f5] 'company-R-objects) ;; C-F5 complete objects.
       )
    )
+  ;; SOLVED: https://github.com/syl20bnr/spacemacs/issues/5395#issuecomment-297027630
+  (add-hook
+   'inferior-ess-mode-hook
+   '(lambda ()
+      (setq-local comint-use-prompt-regexp nil)
+      (setq-local inhibit-field-text-motion nil)
+      )
+   )
   ;;-----------------------------------------
   (defadvice ess-eval-buffer (before really-eval-buffer compile activate)
     "Prevent call ess-eval-buffer by accident, frequently by
