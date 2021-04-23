@@ -100,6 +100,8 @@
 (recentf-mode 1)                    ;; List of recently opened files.
 (global-auto-revert-mode 1)         ;; Refresh buffer if file changes.
 
+;; (global-flycheck-mode -1)           ;; Turn off Flycheck.
+
 (setq column-number-mode t)         ;; Show cursor position.
 (setq auto-save-default nil)        ;; Turn off #autosave#.
 (setq make-backup-files nil)        ;; Turn off backup~.
@@ -372,7 +374,7 @@
       ;;-------------------------------------
       (require 'ess-site)
       ;; (auto-complete-mode -1)
-      (flycheck-mode nil)        ;; Disable flycheck/lintr.
+      (flycheck-mode -1)        ;; Disable flycheck/lintr.
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
       (ess-toggle-underscore nil)
