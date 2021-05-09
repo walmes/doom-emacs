@@ -18,18 +18,23 @@ git clone git@github.com:walmes/doom-emacs.git ~/.doom.d/
 #-----------------------------------------------------------------------
 # Install some packages manually.
 
-# (require 'package)
-# (package-initialize)
-# (when (not (package-installed-p 'electric-spacing-r))
-#   (url-copy-file
-#    "https://raw.githubusercontent.com/walmes/electric-spacing/master/electric-spacing-r.el"
-#    "~/.doom.d/electric-spacing-r.el")
-#   (byte-compile-file "~/.doom.d/electric-spacing-r.el"))
-# (when (not (package-installed-p 'essh))
-#   (url-copy-file
-#    "https://www.emacswiki.org/emacs/download/essh.el"
-#    "~/.doom.d/essh.el")
-#   (byte-compile-file "~/.doom.d/essh.el"))
+# (progn
+#   (require 'package)
+#   (package-initialize)
+#   (when (not (package-installed-p 'electric-spacing-r))
+#     (url-copy-file
+#      "https://raw.githubusercontent.com/walmes/electric-spacing/master/electric-spacing-r.el"
+#      "~/.doom.d/electric-spacing-r.el")
+#     (byte-compile-file "~/.doom.d/electric-spacing-r.el")))
+
+# (progn
+#   (require 'package)
+#   (package-initialize)
+#   (when (not (package-installed-p 'essh))
+#     (url-copy-file
+#      "https://www.emacswiki.org/emacs/download/essh.el"
+#      "~/.doom.d/essh.el")
+#     (byte-compile-file "~/.doom.d/essh.el")))
 
 # Requirements for `python` module.
 # https://github.com/hlissner/doom-emacs/tree/develop/modules/lang/python
