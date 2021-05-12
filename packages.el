@@ -68,6 +68,13 @@
   :recipe (:host github
            :repo "emacsmirror/bookmark-plus"))
 
+;; Version with Org-struct.
+;; https://github.com/bzg/org-mode/releases/tag/release_9.1.14
+;; (package! org-mode
+;;   :pin "30498ef932bc35c26e3e58278f4987a67480b446"
+;;   :recipe (:host github
+;;            :repo "bzg/org-mode"))
+
 ;; Gets an error about unbalanced expressions.
 ;; (package! electric-spacing-r
 ;;   :recipe (:host github
