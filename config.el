@@ -333,6 +333,7 @@
           comint-scroll-to-bottom-on-output t
           comint-move-point-for-output t
           ess-indent-offset 4)
+    (setq lsp-diagnostics-provider :none)
     )
   :bind
   (("C-S-<f5>" . ess-eval-chunk)
