@@ -316,6 +316,18 @@
       (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory))))
 
 ;;----------------------------------------------------------------------
+;; TODO Read this
+;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+
+;; ;; https://github.com/emacs-lsp/lsp-mode/issues/1383
+;; (use-package! lsp-mode
+;;   :config
+;;   (setq lsp-enable-snippet t
+;;         lsp-prefer-flymake nil)
+;;   (setq lsp-eldoc-hook '(lsp-hover))
+;;   (remove-hook 'lsp-eldoc-hook 'lsp-document-highlight))
+
+;;----------------------------------------------------------------------
 ;; ESS - Emacs Speaks Statistics.
 ;; http://ess.r-project.org/
 
@@ -323,6 +335,7 @@
 ;; https://www.dcalacci.net/2018/remote-ess/
 
 (use-package! ess
+  ;; (ess :variables ess-r-backend 'lsp)
   :init
   (progn
     (setq-default ess-dialect "R")
@@ -333,7 +346,10 @@
           comint-scroll-to-bottom-on-output t
           comint-move-point-for-output t
           ess-indent-offset 4)
-    (setq lsp-diagnostics-provider :none)
+    ;; (setq lsp-diagnostics-provider :none)
+    (setq ;; ess-r-backend 'lsp
+          ;; ess-style 'RStudio
+          ess-use-flymake nil)
     )
   :bind
   (("C-S-<f5>" . ess-eval-chunk)
@@ -380,6 +396,9 @@
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
       (ess-toggle-underscore nil)
+      ;; https://github.com/emacs-lsp/lsp-ui/issues/367
+      (setq lsp-signature-auto-activate nil)
+      ;; (setq lsp-enable-symbol-highlighting nil) ;; https://github.com/syl20bnr/spacemacs/issues/13934
       ;; (company-mode 1)
       ;; (setq ess-use-company 'script-only)
       ;; `Alt + -'  to cycle `<- | <<- | = ...'.
