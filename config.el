@@ -398,6 +398,7 @@
       (ess-toggle-underscore nil)
       ;; https://github.com/emacs-lsp/lsp-ui/issues/367
       (setq lsp-signature-auto-activate nil)
+      (setq lsp-diagnostics-provider :none)
       ;; (setq lsp-enable-symbol-highlighting nil) ;; https://github.com/syl20bnr/spacemacs/issues/13934
       ;; (company-mode 1)
       ;; (setq ess-use-company 'script-only)
