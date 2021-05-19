@@ -327,12 +327,18 @@
 ;;   (setq lsp-eldoc-hook '(lsp-hover))
 ;;   (remove-hook 'lsp-eldoc-hook 'lsp-document-highlight))
 
+;; (setq lsp-restart 'ignore)
+;; (setq lsp-restart 'auto-restart)
+;; (setq lsp-keep-workspace-alive nil)
+
 ;;----------------------------------------------------------------------
 ;; ESS - Emacs Speaks Statistics.
 ;; http://ess.r-project.org/
 
 ;; Automatically connecting to remote R sessions in Emacs using ESS
 ;; https://www.dcalacci.net/2018/remote-ess/
+
+;; (add-hook 'ess-mode-hook #'lsp-deferred)
 
 (use-package! ess
   ;; (ess :variables ess-r-backend 'lsp)
@@ -399,6 +405,7 @@
       ;; https://github.com/emacs-lsp/lsp-ui/issues/367
       (setq lsp-signature-auto-activate nil)
       (setq lsp-diagnostics-provider :none)
+      (setq lsp-restart 'ignore)
       ;; (setq lsp-enable-symbol-highlighting nil) ;; https://github.com/syl20bnr/spacemacs/issues/13934
       ;; (company-mode 1)
       ;; (setq ess-use-company 'script-only)
