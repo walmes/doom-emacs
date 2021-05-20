@@ -59,6 +59,8 @@
 ;; installed and available. You can either set `doom-theme' or manually
 ;; load a theme with the `load-theme' function. This is the default:
 (setq doom-theme 'doom-one)
+;; (use-package! spacemacs-theme
+;;   :init (load-theme 'spacemacs-dark t))
 
 ;; If you use `org' and don't want your org files in the default
 ;; location below, change `org-directory'. It must be set before org
@@ -121,6 +123,27 @@
 ;;       (font-spec :family "Noto Sans" :size 12))
 (setq doom-themes-treemacs-enable-variable-pitch nil)
 
+;; When scrolling with the cursor, show 4 lines above/below.
+(setq scroll-margin 5)
+
+(dolist
+    (mode '(messages-buffer-mode-hook
+            comint-mode-hook
+            term-mode-hook
+            erc-mode-hook
+            inferior-ess-mode-hook
+            eshell-mode-hook
+            inferior-python-mode-hook))
+  (set (make-local-variable 'scroll-margin) 0)
+  )
+
+;; (add-hook 'term-mode-hook
+;;           (lambda ()
+;;             (set (make-local-variable 'scroll-margin) 0)))
+;;
+;; (add-hook 'inferior-ess-mode-hook
+;;           (lambda ()
+;;             (set (make-local-variable 'scroll-margin) 0)))
 
 
 ;;----------------------------------------------------------------------
@@ -171,31 +194,6 @@
 
 ;; Load my functions.
 (require 'funcs)
-
-;;----------------------------------------------------------------------
-;; Font and theme.
-;;----------------------------------------------------------------------
-
-;; Fira Code Light
-;; https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/FiraCode
-
-;; IBM Plex Mono Light
-;; https://fonts.google.com/specimen/IBM+Plex+Mono
-
-;; Font and size.
-(cond
- ;; ((find-font (font-spec :name "IBM Plex Mono Light"))
- ;;  (set-default-font "IBM Plex Mono Light-14"))
- ((find-font (font-spec :name "Fira Code Light"))
-  (set-default-font "Fira Code Light-14"))
- ((find-font (font-spec :name "M+ 2m"))
-  (set-default-font "M+ 2m-14"))
- ((find-font (font-spec :name "Inconsolata"))
-  (set-default-font "Inconsolata-14"))
- ((find-font (font-spec :name "Noto Sans Mono"))
-  (set-default-font "Noto Sans Mono-14"))
- (t
-  (set-default-font "Ubuntu Mono-14")))
 
 ;;----------------------------------------------------------------------
 ;; Configures `company'.
@@ -404,6 +402,7 @@
       (ess-toggle-underscore nil)
       ;; https://github.com/emacs-lsp/lsp-ui/issues/367
       (setq lsp-signature-auto-activate nil)
+      (setq lsp-ui-doc-enable nil)
       (setq lsp-diagnostics-provider :none)
       (setq lsp-restart 'ignore)
       ;; (setq lsp-enable-symbol-highlighting nil) ;; https://github.com/syl20bnr/spacemacs/issues/13934
