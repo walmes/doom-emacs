@@ -390,6 +390,8 @@
    '(lambda ()
       ;;-------------------------------------
       (require 'ess-site)
+      (require 'ess-view-data)
+      (setq ess-view-data-mode t)
       ;; (auto-complete-mode -1)
       (flycheck-mode -1)        ;; Disable flycheck/lintr.
       (setq ess-smart-operators t)
