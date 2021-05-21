@@ -137,15 +137,6 @@
   (set (make-local-variable 'scroll-margin) 0)
   )
 
-;; (add-hook 'term-mode-hook
-;;           (lambda ()
-;;             (set (make-local-variable 'scroll-margin) 0)))
-;;
-;; (add-hook 'inferior-ess-mode-hook
-;;           (lambda ()
-;;             (set (make-local-variable 'scroll-margin) 0)))
-
-
 ;;----------------------------------------------------------------------
 ;; Key bindings.
 ;;----------------------------------------------------------------------
@@ -153,6 +144,10 @@
 ;; C-z to 'undo, the default is C-/.
 (global-unset-key "\C-z")
 (global-set-key "\C-z" 'undo)
+
+;; Uses C-/ to complete paths.
+(global-unset-key (kbd "C-/"))
+(global-set-key (kbd "C-/") 'company-files)
 
 ;; M-. to (un)comment paragraph.
 (global-set-key [?\M-.] (kbd "M-h M-; M-}"))
