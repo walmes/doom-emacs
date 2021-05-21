@@ -391,8 +391,7 @@
       ;;-------------------------------------
       (require 'ess-site)
       (require 'ess-view-data)
-      (setq ess-view-data-mode t)
-      ;; (auto-complete-mode -1)
+      ;; (setq ess-view-data-mode t)
       (flycheck-mode -1)        ;; Disable flycheck/lintr.
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
