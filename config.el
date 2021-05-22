@@ -287,14 +287,15 @@
 ;; https://www.emacswiki.org/emacs/download/essh.el
 
 ;; Download.
-;; (progn
-;;   (require 'package)
-;;   (package-initialize)
-;;   (when (not (package-installed-p 'essh))
-;;     (url-copy-file
-;;      "https://www.emacswiki.org/emacs/download/essh.el"
-;;      "~/.doom.d/essh.el")
-;;     (byte-compile-file "~/.doom.d/essh.el")))
+(progn
+  (when (not (file-exists-p "~/.doom.d/essh.el"))
+    (url-copy-file
+     "https://www.emacswiki.org/emacs/download/essh.el"
+     "~/.doom.d/essh.el")))
+
+;; Bite compile.
+(when (not (file-exists-p "~/.doom.d/essh.elc"))
+  (byte-compile-file "~/.doom.d/essh.el"))
 
 (use-package! essh
   :config
@@ -434,14 +435,15 @@
 ;; https://github.com/walmes/electric-spacing (fork).
 
 ;; Download.
-;; (progn
-;;   (require 'package)
-;;   (package-initialize)
-;;   (when (not (package-installed-p 'electric-spacing-r))
-;;     (url-copy-file
-;;      "https://raw.githubusercontent.com/walmes/electric-spacing/master/electric-spacing-r.el"
-;;      "~/.doom.d/electric-spacing-r.el")
-;;     (byte-compile-file "~/.doom.d/electric-spacing-r.el")))
+(progn
+  (when (not (file-exists-p "~/.doom.d/electric-spacing-r.el"))
+    (url-copy-file
+     "https://raw.githubusercontent.com/walmes/electric-spacing/master/electric-spacing-r.el"
+     "~/.doom.d/electric-spacing-r.el")))
+
+;; Bite compile.
+(when (not (file-exists-p "~/.doom.d/electric-spacing-r.elc"))
+  (byte-compile-file "~/.doom.d/electric-spacing-r.el"))
 
 (use-package! electric-spacing-r
   :config
