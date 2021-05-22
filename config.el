@@ -325,6 +325,42 @@
 ;; (setq lsp-restart 'auto-restart)
 ;; (setq lsp-keep-workspace-alive nil)
 
+;; TODO Read all this. The code below was inspired here:
+;; https://awesomeopensource.com/project/MatthewZMD/.emacs.d
+
+;; https://github.com/emacs-lsp/lsp-ui
+(use-package! lsp-ui
+  :commands lsp-ui-mode
+  :custom
+  (lsp-ui-doc-header t)
+  (lsp-ui-doc-include-signature t)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-ignore-duplicate t)
+  (lsp-ui-sideline-show-code-actions nil)
+  (lsp-ui-doc-show-with-cursor nil)
+  ;; (lsp-ui-doc-border (face-foreground 'default))
+  :config
+  (map! :map lsp-ui-mode-map
+        ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+        ([remap xref-find-references] . lsp-ui-peek-find-references)
+        ("C-c u" . lsp-ui-doc-show)
+        ;; ("C-c u" . lsp-ui-imenu)
+        ("M-i" . lsp-ui-doc-focus-frame))
+  (map! :map lsp-mode-map
+        ("M-n" . forward-paragraph)
+        ("M-p" . backward-paragraph))
+  ;; Use lsp-ui-doc-webkit only in GUI
+  ;; (if (display-graphic-p)
+  ;;     (setq lsp-ui-doc-use-webkit t))
+  ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
+  ;; https://github.com/emacs-lsp/lsp-ui/issues/243
+  (defadvice
+      lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
+    (setq mode-line-format nil)))
+
+;; TODO Doom-emacs configuration. How to use `use-package!' fields.
+;; https://tecosaur.github.io/emacs-config/config.html
+
 ;;----------------------------------------------------------------------
 ;; ESS - Emacs Speaks Statistics.
 ;; http://ess.r-project.org/
@@ -499,17 +535,59 @@
 ;;   M-x lsp-python-ms-setup RET
 ;; https://github.com/microsoft/pyright
 
+;; ATTENTION:
+;; Choose an anaconda Env:
+;;   M-x conda-env-activate base
+;; Restart LSP:
+;;   M-x lsp ...or... M-x lsp-restart-workspace
+
 (use-package! elpy
   :init
   (elpy-enable)
   :config
   (progn
+    (python-indent-offset 4)
     (define-key python-mode-map [f5] 'company-complete)
     (define-key python-mode-map [f6] 'complete-symbol)
     ;; Elpy will install RPC dependencies automatically.
     (setq elpy-rpc-python-command "/home/walmes/anaconda/bin/python3")
     (setq python-shell-interpreter "/home/walmes/anaconda/bin/python3")
     ))
+
+;; TODO FIXME: needs to understand this Env thing.
+;; /home/walmes/anaconda/bin/python3
+
+(use-package! lsp-python-ms
+  :config
+  ;; these hooks can't go in the :hook section since lsp-restart-workspace
+  ;; is not available if lsp isn't active
+  ;; (setq lsp-python-ms-extra-paths [ "/home/walmes/anaconda/bin/python3" ])
+  (add-hook 'conda-postactivate-hook
+            (lambda () (lsp-restart-workspace)))
+  (add-hook 'conda-postdeactivate-hook
+            (lambda () (lsp-restart-workspace))))
+
+;; https://www.reddit.com/r/emacs/comments/hkshob/save_correct_condaenv_for_project/fwxty9v?utm_source=share&utm_medium=web2x&context=3
+;;
+;; 1. Set `conda-project-env-name' as a directory local variable. (With
+;;    projectile you could use the `projectile-edit-dir-locals'
+;;    command.)
+;;
+;; 2. Use `conda-env-activate-for-buffer' to activate the environment
+;;    set. (Or enable `conda-env-autoactivate-mode' to automatically
+;;    activate it.)
+
+(use-package conda
+  :init
+  (setq conda-anaconda-home (expand-file-name "~/anaconda"))
+  (setq conda-env-home-directory (expand-file-name "~/anaconda"))
+  :config
+  (conda-env-initialize-interactive-shells)
+  (conda-env-initialize-eshell))
+
+;; IMPORTANT: check the benefits of lsp-jedi.
+;; https://github.com/fredcamps/lsp-jedi
+;; https://pypi.org/project/jedi-language-server/
 
 ;;----------------------------------------------------------------------
 ;; Latex extensions.
