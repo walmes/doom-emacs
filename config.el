@@ -546,7 +546,7 @@
   (elpy-enable)
   :config
   (progn
-    (python-indent-offset 4)
+    (setq python-indent-offset 4)
     (define-key python-mode-map [f5] 'company-complete)
     (define-key python-mode-map [f6] 'complete-symbol)
     ;; Elpy will install RPC dependencies automatically.
