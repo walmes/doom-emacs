@@ -338,17 +338,17 @@
   (lsp-ui-sideline-ignore-duplicate t)
   (lsp-ui-sideline-show-code-actions nil)
   (lsp-ui-doc-show-with-cursor nil)
-  ;; (lsp-ui-doc-border (face-foreground 'default))
   :config
   (map! :map lsp-ui-mode-map
-        ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-        ([remap xref-find-references] . lsp-ui-peek-find-references)
-        ("C-c u" . lsp-ui-doc-show)
-        ;; ("C-c u" . lsp-ui-imenu)
-        ("M-i" . lsp-ui-doc-focus-frame))
+        ;; ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+        ;; ([remap xref-find-references] . lsp-ui-peek-find-references)
+        "C-c u" #'lsp-ui-doc-show
+        "M-i" #'lsp-ui-doc-focus-frame
+        )
   (map! :map lsp-mode-map
-        ("M-n" . forward-paragraph)
-        ("M-p" . backward-paragraph))
+        "M-n" #'forward-paragraph
+        "M-p" #'backward-paragraph
+        )
   ;; Use lsp-ui-doc-webkit only in GUI
   ;; (if (display-graphic-p)
   ;;     (setq lsp-ui-doc-use-webkit t))
@@ -360,6 +360,9 @@
 
 ;; TODO Doom-emacs configuration. How to use `use-package!' fields.
 ;; https://tecosaur.github.io/emacs-config/config.html
+
+;; TODO Take this project as a referece of Doom-Emacs.
+;; https://dotdoom.rgoswami.me/config.html
 
 ;;----------------------------------------------------------------------
 ;; ESS - Emacs Speaks Statistics.
@@ -557,15 +560,33 @@
 ;; TODO FIXME: needs to understand this Env thing.
 ;; /home/walmes/anaconda/bin/python3
 
-(use-package! lsp-python-ms
-  :config
-  ;; these hooks can't go in the :hook section since lsp-restart-workspace
-  ;; is not available if lsp isn't active
-  ;; (setq lsp-python-ms-extra-paths [ "/home/walmes/anaconda/bin/python3" ])
-  (add-hook 'conda-postactivate-hook
-            (lambda () (lsp-restart-workspace)))
-  (add-hook 'conda-postdeactivate-hook
-            (lambda () (lsp-restart-workspace))))
+;; https://enzuru.medium.com/helpful-emacs-python-mode-hooks-especially-for-type-hinting-c4b70b9b2216
+(add-hook
+ 'python-mode-hook
+ (lambda ()
+   (anaconda-mode)
+   (anaconda-eldoc-mode)
+   (flycheck-mode nil)
+   (setq lsp-diagnostics-provider :none)
+   ;; This configures `pyls' language server.
+   (setq lsp-clients-python-command "/home/walmes/anaconda/bin/pyls")
+   (setq lsp-pyls-plugins-pylint-enabled t)
+   (setq lsp-pyls-plugins-autopep8-enabled nil)
+   (setq lsp-pyls-plugins-yapf-enabled t)
+   (setq lsp-pyls-plugins-pyflakes-enabled nil)
+   ;; (local-set-key (kbd "C-x C-d") 'anaconda-mode-show-doc)
+   ;; (local-set-key (kbd "C-x C-w") 'anaconda-mode-find-definitions)
+   ))
+
+;; (use-package! lsp-python-ms
+;;   :config
+;;   ;; these hooks can't go in the :hook section since lsp-restart-workspace
+;;   ;; is not available if lsp isn't active
+;;   ;; (setq lsp-python-ms-extra-paths [ "/home/walmes/anaconda/bin/python3" ])
+;;   (add-hook 'conda-postactivate-hook
+;;             (lambda () (lsp-restart-workspace)))
+;;   (add-hook 'conda-postdeactivate-hook
+;;             (lambda () (lsp-restart-workspace))))
 
 ;; https://www.reddit.com/r/emacs/comments/hkshob/save_correct_condaenv_for_project/fwxty9v?utm_source=share&utm_medium=web2x&context=3
 ;;
@@ -577,13 +598,18 @@
 ;;    set. (Or enable `conda-env-autoactivate-mode' to automatically
 ;;    activate it.)
 
-(use-package conda
+(use-package! conda
   :init
   (setq conda-anaconda-home (expand-file-name "~/anaconda"))
   (setq conda-env-home-directory (expand-file-name "~/anaconda"))
   :config
   (conda-env-initialize-interactive-shells)
   (conda-env-initialize-eshell))
+
+(use-package! anaconda-mode
+  :init
+  (add-hook 'python-mode-hook 'anaconda-mode)
+  (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
 
 ;; IMPORTANT: check the benefits of lsp-jedi.
 ;; https://github.com/fredcamps/lsp-jedi

@@ -68,6 +68,9 @@
   :recipe (:host github
            :repo "emacsmirror/bookmark-plus"))
 
+(package! lsp-python-ms
+  :disable t)
+
 ;; Version with Org-struct.
 ;; https://github.com/bzg/org-mode/releases/tag/release_9.1.14
 ;; (package! org-mode
