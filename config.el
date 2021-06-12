@@ -679,6 +679,7 @@
   ("C-c l m" . hl-todo-previous)
   ("C-c l n" . hl-todo-next)
   :config
+  (message "final do arquivo")
   (global-hl-todo-mode t)
   (add-to-list 'hl-todo-keyword-faces '("IMPROVE"     font-lock-constant-face bold))
   (add-to-list 'hl-todo-keyword-faces '("QUESTION"    font-lock-constant-face bold))
@@ -693,8 +694,10 @@
   (add-to-list 'hl-todo-keyword-faces '("OBS"         warning bold))
   (add-to-list 'hl-todo-keyword-faces '("PROBLEM"     warning bold))
   (add-to-list 'hl-todo-keyword-faces '("DONE"        success bold))
+  (add-to-list 'hl-todo-keyword-faces '("OKAY"        success bold))
   (add-to-list 'hl-todo-keyword-faces '("GOOD"        success bold))
   (add-to-list 'hl-todo-keyword-faces '("SOLVED"      success bold))
-  (add-to-list 'hl-todo-keyword-faces '("WALMES"    . hl-todo-good-words)))
+  (add-to-list 'hl-todo-keyword-faces '("WALMES"    . hl-todo-good-words))
+  )
 
 ;;----------------------------------------------------------------------
