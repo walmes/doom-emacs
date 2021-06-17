@@ -257,6 +257,15 @@
    ("C-}" . yafolding-toggle-element)))
 
 ;;----------------------------------------------------------------------
+;; Snippets.
+;; https://joaotavora.github.io/yasnippet/snippet-development.html
+;; http://pragmaticemacs.com/emacs/smart-text-templates-with-yasnippet/
+
+(use-package! yasnippet
+  :config
+  (yas-global-mode 1))
+
+;;----------------------------------------------------------------------
 ;; MarkDown configuration.
 
 ;; OrgStruct funcionally was removed from Org in version 9.2. The last
