@@ -445,12 +445,23 @@
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
       (ess-toggle-underscore nil)
+      ;;
+      ;; https://stackoverflow.com/questions/7502540/make-emacs-ess-follow-r-style-guide
+      ;; (ess-set-style 'C++)
+      (ess-set-style 'RStudio)
+      ;; (setq ess-offset-arguments 'prev-line)
+      ;; (set 'ess-arg-function-offset t)
+      ;;
+      ;;-------------------------------------
+      ;; LSP.
       ;; https://github.com/emacs-lsp/lsp-ui/issues/367
       (setq lsp-signature-auto-activate nil)
       (setq lsp-ui-doc-enable nil)
       (setq lsp-diagnostics-provider :none)
       (setq lsp-restart 'ignore)
       ;; (setq lsp-enable-symbol-highlighting nil) ;; https://github.com/syl20bnr/spacemacs/issues/13934
+      ;;
+      ;; Company. ---------------------------
       ;; (company-mode 1)
       ;; (setq ess-use-company 'script-only)
       ;; `Alt + -'  to cycle `<- | <<- | = ...'.
