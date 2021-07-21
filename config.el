@@ -165,6 +165,9 @@
 (global-set-key (kbd "<S-f11>") 'toggle-menu-bar-mode-from-frame)
 (global-set-key (kbd "<S-f12>") 'toggle-tool-bar-mode-from-frame)
 
+;; (global-auto-revert-mode 1)
+(global-set-key [f5] 'revert-buffer)
+
 ;; ;; Navigation in balanced expressions.
 ;; (dolist (mode '(ess-mode-hook lisp-mode-hook))
 ;;   (add-hook mode
@@ -264,6 +267,25 @@
 (use-package! yasnippet
   :config
   (yas-global-mode 1))
+
+;;----------------------------------------------------------------------
+;; Web-mode.
+
+(use-package! web-mode
+  :config
+  (progn
+    (add-hook 'web-mode-hook
+              '(lambda ()
+                 (setq web-mode-markup-indent-offset 4)
+                 ))
+    ))
+
+;;----------------------------------------------------------------------
+;; Web-mode.
+
+(use-package! treemacs
+  :config
+  (setq treemacs-is-never-other-window nil))
 
 ;;----------------------------------------------------------------------
 ;; MarkDown configuration.
@@ -455,6 +477,7 @@
       ;;-------------------------------------
       ;; LSP.
       ;; https://github.com/emacs-lsp/lsp-ui/issues/367
+      (setq lsp-enable-symbol-highlighting nil)
       (setq lsp-signature-auto-activate nil)
       (setq lsp-ui-doc-enable nil)
       (setq lsp-diagnostics-provider :none)
@@ -466,7 +489,7 @@
       ;; (setq ess-use-company 'script-only)
       ;; `Alt + -'  to cycle `<- | <<- | = ...'.
       (define-key ess-mode-map [?\M--] 'ess-cycle-assign)
-      (define-key ess-mode-map [f5] 'company-R-args)      ;; F5 do show ARGS.
+      (define-key ess-mode-map [S-f5] 'company-R-args)    ;; S-F5 do show ARGS.
       (define-key ess-mode-map [C-f5] 'company-R-objects) ;; C-F5 complete objects.
       )
    )

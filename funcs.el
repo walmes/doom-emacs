@@ -548,8 +548,8 @@
     (ess-command
      (format
       "local({
-          formatR::tidy_source(text=\"\n%s\",
-                               arrow=TRUE, width.cutoff=60) })\n"
+          formatR::tidy_source(text = \"\n%s\",
+                               arrow = TRUE, width.cutoff = 60) })\n"
       string) buf)
     (with-current-buffer buf
       (goto-char (point-max))
@@ -620,6 +620,33 @@
     (delete-region beg end)
     (insert string)
     (delete-char -2)))
+
+(defun wz-ess-open-html-documentation (beg end)
+  "TODO. By Walmes Zeviani."
+  (interactive "r")
+  (let ((string
+         (replace-regexp-in-string
+          "\"" "\\\\\\&"
+          (replace-regexp-in-string
+           "\\\\\"" "\\\\\\&"
+           (buffer-substring-no-properties beg end))))
+        (buf (get-buffer-create "*ess-command-output*")))
+    (ess-force-buffer-current "Process to load into:")
+    (ess-command
+     (format
+      "local({
+           help(%s, help_type = \"html\")
+       })\n"
+      string) buf)
+    (with-current-buffer buf
+      (goto-char (point-max))
+      (let ((end (point)))
+        (goto-char (point-min))
+        (skip-chars-forward " +")
+        (setq string (buffer-substring-no-properties (point) end))))
+    )
+  )
+
 
 ;;----------------------------------------------------------------------
 ;; Improved version of occur. Quick navigation.
@@ -725,6 +752,7 @@
  'ess-mode-hook
  (lambda ()
    (local-set-key (kbd "C-c i i") 'wz-insert-chunk)
+   (local-set-key (kbd "<C-f1>")  'wz-ess-open-html-documentation)
    (local-set-key (kbd "<f6>")    'wz-polymode-eval-R-chunk)
    (local-set-key (kbd "<f7>")    'wz-ess-break-or-join-lines-wizard)
    (local-set-key (kbd "S-<f6>")  'wz-polymode-eval-R-chunk-and-next)
