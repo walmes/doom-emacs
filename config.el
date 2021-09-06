@@ -216,8 +216,9 @@
 
 (use-package! bookmark+
   :init
-  (setq bookmark-default-file "~/Dropbox/bookmarks"
-        bookmark-save-flag 1)
+  (when (file-exists-p "~/Dropbox/bookmarks")
+    (setq bookmark-default-file "~/Dropbox/bookmarks"
+          bookmark-save-flag 1))
   :config
   ;; ATTENTION: for some unknown reason, the keymap must be defined in
   ;; `:config' because in `:bind' the bookmark list buffer have a
