@@ -616,6 +616,15 @@
     (setq python-shell-interpreter "/home/walmes/anaconda/bin/python3")
     ))
 
+;; To list conda envs.
+;;   cd anaconda
+;;   source activate
+;;   conda info --envs
+(use-package pyvenv
+  :ensure t
+  :init
+  (setenv "WORKON_HOME" "~/anaconda"))
+
 ;; ;; https://enzuru.medium.com/helpful-emacs-python-mode-hooks-especially-for-type-hinting-c4b70b9b2216
 ;; (add-hook
 ;;  'python-mode-hook
