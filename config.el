@@ -569,12 +569,15 @@
 ;;----------------------------------------------------------------------
 ;; Python as a IDE with REPL.
 
+;; ATTENTION: adds to yout `~/.bachrc' file
+;; export PATH="$HOME/anaconda/bin:$PATH"
+
 ;; Requirements on:
 ;; https://github.com/hlissner/doom-emacs/tree/develop/modules/lang/python
 ;;   cd anaconda
 ;;   source activate
 ;;   pip install pytest nose black pyflakes isort
-;;   pip install python-language-server[all]
+;;   pip install --user python-language-server[all]
 ;;   pip install pyright
 ;;   conda deactivate
 ;; On Emacs:
@@ -588,45 +591,60 @@
 ;; Restart LSP:
 ;;   M-x lsp ...or... M-x lsp-restart-workspace
 
+;; (use-package python-mode
+;;   :init
+;;   (message "HERE python-mode init")
+;;   :hook
+;;   (message "HERE python-mode hook")
+;;   (python-mode . lsp-deferred)
+;;   :custom
+;;   (message "HERE python-mode custom")
+;;   (setq lsp-diagnostics-provider :none)
+;;   (python-shell-interpreter "/home/walmes/anaconda/bin/python3"))
+
 (use-package! elpy
   :init
   (elpy-enable)
   :config
   (progn
+    ;; (message "HERE elpy")
     (setq python-indent-offset 4)
-    (define-key python-mode-map [f5] 'company-complete)
-    (define-key python-mode-map [f6] 'complete-symbol)
+    (define-key python-mode-map [S-f5] 'company-complete)
+    (define-key python-mode-map [S-f6] 'complete-symbol)
     ;; Elpy will install RPC dependencies automatically.
     (setq elpy-rpc-python-command "/home/walmes/anaconda/bin/python3")
     (setq python-shell-interpreter "/home/walmes/anaconda/bin/python3")
     ))
 
-;; TODO FIXME: needs to understand this Env thing.
-;; /home/walmes/anaconda/bin/python3
-
-;; https://enzuru.medium.com/helpful-emacs-python-mode-hooks-especially-for-type-hinting-c4b70b9b2216
-(add-hook
- 'python-mode-hook
- (lambda ()
-   (anaconda-mode)
-   (anaconda-eldoc-mode)
-   (flycheck-mode nil)
-   (setq lsp-diagnostics-provider :none)
-   ;; This configures `pyls' language server.
-   (setq lsp-clients-python-command "/home/walmes/anaconda/bin/pyls")
-   (setq lsp-pyls-plugins-pylint-enabled t)
-   (setq lsp-pyls-plugins-autopep8-enabled nil)
-   (setq lsp-pyls-plugins-yapf-enabled t)
-   (setq lsp-pyls-plugins-pyflakes-enabled nil)
-   ;; (local-set-key (kbd "C-x C-d") 'anaconda-mode-show-doc)
-   ;; (local-set-key (kbd "C-x C-w") 'anaconda-mode-find-definitions)
-   ))
+;; ;; https://enzuru.medium.com/helpful-emacs-python-mode-hooks-especially-for-type-hinting-c4b70b9b2216
+;; (add-hook
+;;  'python-mode-hook
+;;  (lambda ()
+;;    ;; (message "HERE python-mode-hook")
+;;    (anaconda-mode)
+;;    (anaconda-eldoc-mode)
+;;    (flycheck-mode -1)        ;; Disable flycheck.
+;;    (flymake-mode -1)
+;;    (setq lsp-diagnostics-provider :none)
+;;    ;; This configures `pyls' language server.
+;;    ;; (setq lsp-clients-python-command "/home/walmes/anaconda/bin/pyls")
+;;    ;; (setq lsp-pyls-plugins-pylint-enabled nil)
+;;    ;; (setq lsp-pyls-plugins-autopep8-enabled nil)
+;;    ;; (setq lsp-pyls-plugins-yapf-enabled t)
+;;    ;; (setq lsp-pyls-plugins-pyflakes-enabled nil)
+;;    ;; (local-set-key (kbd "C-x C-d") 'anaconda-mode-show-doc)
+;;    ;; (local-set-key (kbd "C-x C-w") 'anaconda-mode-find-definitions)
+;;    ))
 
 ;; (use-package! lsp-python-ms
 ;;   :config
 ;;   ;; these hooks can't go in the :hook section since lsp-restart-workspace
 ;;   ;; is not available if lsp isn't active
 ;;   ;; (setq lsp-python-ms-extra-paths [ "/home/walmes/anaconda/bin/python3" ])
+;;   ;; (flycheck-mode nil)
+;;   ;; (flymake-mode nil)
+;;   ;; (setq lsp-diagnostics-provider :none)
+;;   (message "HERE lsp-python-ms")
 ;;   (add-hook 'conda-postactivate-hook
 ;;             (lambda () (lsp-restart-workspace)))
 ;;   (add-hook 'conda-postdeactivate-hook
@@ -644,20 +662,32 @@
 
 (use-package! conda
   :init
+  (message "HERE conda init")
   (setq conda-anaconda-home (expand-file-name "~/anaconda"))
   (setq conda-env-home-directory (expand-file-name "~/anaconda"))
   :config
+  (message "HERE conda config")
   (conda-env-initialize-interactive-shells)
   (conda-env-initialize-eshell))
 
 (use-package! anaconda-mode
   :init
+  (message "HERE anaconda-mode")
   (add-hook 'python-mode-hook 'anaconda-mode)
   (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
 
 ;; IMPORTANT: check the benefits of lsp-jedi.
 ;; https://github.com/fredcamps/lsp-jedi
 ;; https://pypi.org/project/jedi-language-server/
+
+;; ;; pip install -U jedi-language-server
+;; (use-package lsp-jedi
+;;   :ensure t
+;;   :config
+;;   (with-eval-after-load "lsp-mode"
+;;     (message "HERE lsp-jedi")
+;;     (add-to-list 'lsp-disabled-clients 'pyls)
+;;     (add-to-list 'lsp-enabled-clients 'jedi)))
 
 ;;----------------------------------------------------------------------
 ;; Latex extensions.

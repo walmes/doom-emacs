@@ -68,8 +68,15 @@
   :recipe (:host github
            :repo "emacsmirror/bookmark-plus"))
 
-(package! lsp-python-ms
-  :disable t)
+;; Microsoft language server.
+;; (package! lsp-python-ms)            ;; Turn on.
+(package! lsp-python-ms :disable t) ;; Turn off.
+
+;; (package! lsp-pyright)
+
+;; Needs `sudo apt-get install virtualenv'.
+;; (package! lsp-jedi)
+;; (package! jedi)
 
 (package! yasnippet)
 
