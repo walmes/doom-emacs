@@ -68,6 +68,12 @@
   :recipe (:host github
            :repo "emacsmirror/bookmark-plus"))
 
+;; pyls.
+;; pip install --user python-language-server[all]
+
+;; pylsp.
+;; pip install --user python-lsp-server
+
 ;; Microsoft language server.
 ;; (package! lsp-python-ms)            ;; Turn on.
 (package! lsp-python-ms :disable t) ;; Turn off.
