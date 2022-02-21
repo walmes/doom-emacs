@@ -778,6 +778,8 @@
   (add-to-list 'hl-todo-keyword-faces '("ATTENTION"   warning bold))
   (add-to-list 'hl-todo-keyword-faces '("OBS"         warning bold))
   (add-to-list 'hl-todo-keyword-faces '("PROBLEM"     warning bold))
+  (add-to-list 'hl-todo-keyword-faces '("DISCLAIMER"  warning bold))
+  (add-to-list 'hl-todo-keyword-faces '("BONUS"       success bold))
   (add-to-list 'hl-todo-keyword-faces '("DONE"        success bold))
   (add-to-list 'hl-todo-keyword-faces '("OKAY"        success bold))
   (add-to-list 'hl-todo-keyword-faces '("GOOD"        success bold))

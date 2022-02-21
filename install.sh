@@ -54,5 +54,5 @@ git clone git@github.com:walmes/doom-emacs.git ~/.doom.d/
 # Requirements for `ess` module.
 LIB="/usr/lib/R/site-library"
 REPOS="http://cran-r.c3sl.ufpr.br/"
-CMD="lib <- \"$LIB\"; repos <- \"$REPOS\"; install.packages(c(\"lintr\", \"languageserver\"), dependencies = TRUE, lib = lib, repos = repos)"
+CMD="lib <- \"$LIB\"; repos <- \"$REPOS\"; install.packages(c(\"formatR\", \"lintr\", \"languageserver\"), dependencies = TRUE, lib = lib, repos = repos)"
 sudo Rscript -e "$CMD"
