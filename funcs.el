@@ -766,7 +766,7 @@
    (local-set-key (kbd "<S-f9>")  'wz-ess-backward-R-assigment-symbol)
    (local-set-key (kbd "<S-f10>") 'wz-ess-forward-R-assigment-symbol)
    ;; (local-set-key (kbd "C-c C-h") 'ess-edit-indent-call-sophisticatedly)
-   (local-set-key (kbd "C-|")
+   (local-set-key (kbd "C-M-|")
                   'ess-indent-region-with-formatR-tidy-source)
    (local-set-key (kbd "C-?")
                   'wz-ess-stringi-escape-unicode)))

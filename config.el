@@ -427,7 +427,9 @@
    ("C-S-<f6>" . ess-eval-chunk-and-step)
    ("C-S-<f7>" . ess-noweb-next-code-chunk)
    ("C-S-<f8>" . ess-noweb-previous-code-chunk)
-   ("C-S-<f9>" . ess-noweb-goto-chunk))
+   ("C-S-<f9>" . ess-noweb-goto-chunk)
+   ;; Native pipe.
+   ("C-|" . " |>"))
   :config
   ;; Script and console font lock highlight.
   (setq ess-R-font-lock-keywords
