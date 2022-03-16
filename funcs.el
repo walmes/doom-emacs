@@ -720,6 +720,29 @@
 ;; instead; also quit mode with Ctrl-g.
 
 ;;----------------------------------------------------------------------
+;; Based on https://github.com/emacs-lsp/lsp-treemacs/issues/35.
+;; Requieres lsp-treemacs: https://github.com/emacs-lsp/lsp-treemacs
+
+(defun lsp-treemacs-symbols-toggle ()
+  "Toggle the lsp-treemacs-symbols buffer."
+  (interactive)
+  (if (get-buffer "*LSP Symbols List*")
+      (kill-buffer "*LSP Symbols List*")
+    (progn (lsp-treemacs-symbols)
+           (other-window -1))))
+
+(defun lsp-ui-imenu-toggle ()
+  "Toggle the lsp-ui-imenu buffer."
+  (interactive)
+  (if (get-buffer "*lsp-ui-imenu*")
+      (kill-buffer "*lsp-ui-imenu*")
+    ;; (progn (lsp-ui-imenu)
+    ;;        (other-window -1))
+    (lsp-ui-imenu)
+    )
+  )
+
+;;----------------------------------------------------------------------
 
 (define-key global-map "\M-Q" 'unfill-region)
 (define-key global-map (kbd "C-S-o") 'my-occur)

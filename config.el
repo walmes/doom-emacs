@@ -397,6 +397,16 @@
 ;; https://dotdoom.rgoswami.me/config.html
 
 ;;----------------------------------------------------------------------
+;; lsp-treemacs
+;; https://github.com/emacs-lsp/lsp-treemacs
+
+(use-package! lsp-treemacs
+  :bind
+  ("C-<f8>" . lsp-treemacs-symbols-toggle)
+  ("<f8>" . lsp-ui-imenu-toggle)
+  )
+
+;;----------------------------------------------------------------------
 ;; ESS - Emacs Speaks Statistics.
 ;; http://ess.r-project.org/
 
