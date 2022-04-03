@@ -63,7 +63,7 @@
 (package! imenu-list)
 (package! auctex)
 (package! ess-view-data)
-(package! lsp-treemacs)k
+(package! lsp-treemacs)
 
 (package! bookmark+
   :recipe (:host github
