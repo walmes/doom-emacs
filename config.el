@@ -342,6 +342,35 @@
       (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory))))
 
 ;;----------------------------------------------------------------------
+;; hi-lock.el - Highlight patterns in buffer.
+;; https://www.emacswiki.org/emacs/HiLock
+;; https://emacs.stackexchange.com/questions/15025/highlighting-automatically-on-file-open
+
+;; Download.
+(progn
+  (when (not (file-exists-p "~/.doom.d/hi-lock.el"))
+    (url-copy-file
+     "http://web.mit.edu/Emacs/source/emacs/lisp/hi-lock.el"
+     "~/.doom.d/hi-lock.el")))
+
+;; Bite compile.
+(when (not (file-exists-p "~/.doom.d/hi-lock.elc"))
+  (byte-compile-file "~/.doom.d/hi-lock.el"))
+
+;; M-s h r   highlight-regexp                    ;; <-- Create.
+;; M-s h w   hi-lock-write-interactive-patterns  ;; <-- Save in buffer.
+;; M-s h u   unhighlight-regexp
+;; M-s h p   highlight-phrase
+;; M-s h l   highlight-lines-matching-regexp
+;; M-s h f   hi-lock-find-patterns
+(use-package! hi-lock)
+
+;; Example of syntax resulted.
+;; Hi-lock: (("`.*`" (0 'hi-blue-b t)))
+;; Hi-lock: (("{.*}" (0 'hi-blue-b t)))
+;; QUESTION: activate this for some modes.
+
+;;----------------------------------------------------------------------
 ;; TODO Read this
 ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 
