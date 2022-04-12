@@ -619,7 +619,7 @@
         (setq string (buffer-substring-no-properties (point) end))))
     (delete-region beg end)
     (insert string)
-    (delete-char -2)))
+    (delete-char -1)))
 
 (defun wz-ess-open-html-documentation (beg end)
   "TODO. By Walmes Zeviani."
