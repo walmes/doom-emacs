@@ -834,3 +834,26 @@
   )
 
 ;;----------------------------------------------------------------------
+;; hl-prog-extra.
+;; https://gitlab.com/ideasman42/emacs-hl-prog-extra
+
+(use-package! hl-prog-extra
+  :commands (hl-prog-extra-mode)
+  :config
+  (setq hl-prog-extra-list
+        (list
+         ;; To highlight R packages: {tidyverse}.
+         '("{[^{]+}" 1 comment-only font-lock-keyword-face)
+         ;; To highlight code: `code`.
+         '("`[^`]+`" 1 comment-only font-lock-constant-face)
+         ;; Match URLs: http://xyz.com.
+         '("\\<https?://[^[:blank:]]*" 1 comment success)
+         ;; Match email address: <email@name.foo>.
+         ;; '("<\\([[:alnum:]\\._-]+@[[:alnum:]\\._-]+\\)>" 1 comment success)
+         )
+        )
+  :init
+  (add-hook 'ess-mode-hook (lambda () (hl-prog-extra-mode))))
+
+
+;;----------------------------------------------------------------------

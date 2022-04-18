@@ -64,6 +64,7 @@
 (package! auctex)
 (package! ess-view-data)
 (package! lsp-treemacs)
+(package! hl-prog-extra)
 
 (package! bookmark+
   :recipe (:host github
