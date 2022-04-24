@@ -289,6 +289,17 @@
   (setq treemacs-is-never-other-window nil))
 
 ;;----------------------------------------------------------------------
+;; Uses `M-x screeshot' to take a screenshot of a region or buffer.
+;; https://www.emacswiki.org/emacs/ScreenShot
+;; https://github.com/tecosaur/screenshot
+
+(use-package! screenshot
+  :config
+  (setq screenshot-schemes
+        '(("current-directory" :dir default-directory)))
+  (setq screenshot-default-scheme "current-directory"))
+
+;;----------------------------------------------------------------------
 ;; MarkDown configuration.
 
 ;; OrgStruct funcionally was removed from Org in version 9.2. The last
@@ -854,6 +865,5 @@
         )
   :init
   (add-hook 'ess-mode-hook (lambda () (hl-prog-extra-mode))))
-
 
 ;;----------------------------------------------------------------------

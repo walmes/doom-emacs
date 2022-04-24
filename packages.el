@@ -65,10 +65,19 @@
 (package! ess-view-data)
 (package! lsp-treemacs)
 (package! hl-prog-extra)
+(package! yasnippet)
 
 (package! bookmark+
   :recipe (:host github
            :repo "emacsmirror/bookmark-plus"))
+
+;; https://github.com/tecosaur/screenshot
+(package! screenshot
+  :recipe (:host github
+           :repo "tecoqsaur/screenshot"
+           ;; Avoid generate `.elc' that has a bug.
+           ;; https://github.com/tecosaur/screenshot/issues/11
+           :build (:not compile)))
 
 ;; pyls.
 ;; pip install --user python-language-server[all]
@@ -85,8 +94,6 @@
 ;; Needs `sudo apt-get install virtualenv'.
 ;; (package! lsp-jedi)
 ;; (package! jedi)
-
-(package! yasnippet)
 
 ;; Version with Org-struct.
 ;; https://github.com/bzg/org-mode/releases/tag/release_9.1.14
