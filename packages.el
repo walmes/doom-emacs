@@ -74,7 +74,7 @@
 ;; https://github.com/tecosaur/screenshot
 (package! screenshot
   :recipe (:host github
-           :repo "tecoqsaur/screenshot"
+           :repo "tecosaur/screenshot"
            ;; Avoid generate `.elc' that has a bug.
            ;; https://github.com/tecosaur/screenshot/issues/11
            :build (:not compile)))
