@@ -621,6 +621,58 @@
     (insert string)
     (delete-char -1)))
 
+(defun wz-ess-insert-function-args (beg end)
+  "This function inserts all arguments of a function call.
+   When you mark the word `plot' this function returns
+   `plot(x, y, ....)'. By Walmes Zeviani."
+  (interactive "r")
+  (let ((string
+         (replace-regexp-in-string
+          "\"" "\\\\\\&"
+          (replace-regexp-in-string
+           "\\\\\"" "\\\\\\&"
+           (buffer-substring-no-properties beg end)))
+         )
+        (buf (get-buffer-create "*ess-command-output*"))
+        )
+    (ess-force-buffer-current "Process to load into:")
+    (ess-command
+     (format
+      "local({
+           usage <- function(f = 'lm', shift = 0L) {
+               f_width <- nchar(f)
+               u <- capture.output(args(f)) |>
+                   sub(pattern = 'function [(]',
+                       replacement = paste0(f, '(')) |>
+                   head(n = -1)
+               u <- u |>
+                   paste(collapse = '') |>
+                   gsub(pattern = '[[:space:]]+', replacement = ' ') |>
+                   strsplit(split = ', ')
+               u <- u[[1]]
+               u[-length(u)] <- paste0(u[-length(u)], ',\n')
+               spaces <- c(paste(rep(' ', shift),
+                                 collapse = ''),
+                           paste(rep(' ', shift + f_width - 1),
+                                 collapse = ''))
+               u[1] <- paste(spaces[1], u[1])
+               u[-1] <- paste(spaces[-1], u[-1])
+               cat(u, '\n')
+           }
+           usage(\"%s\", %d)
+       })\n"
+      string (save-excursion (goto-char beg) (current-column))) buf)
+    (with-current-buffer buf
+      (goto-char (point-max))
+      (let ((end (point)))
+        (goto-char (point-min))
+        (skip-chars-forward " +")
+        (setq string (buffer-substring-no-properties (point) end))))
+    (delete-region beg end)
+    (insert string)
+    (delete-char -1)
+    (goto-char end)))
+
 (defun wz-ess-open-html-documentation (beg end)
   "TODO. By Walmes Zeviani."
   (interactive "r")
