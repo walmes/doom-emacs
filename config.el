@@ -619,6 +619,11 @@
 ;;     ))
 
 ;;----------------------------------------------------------------------
+;; Quarto.
+
+(use-package quarto-mode)
+
+;;----------------------------------------------------------------------
 ;; Python as a IDE with REPL.
 
 ;; ATTENTION: adds to yout `~/.bachrc' file
@@ -652,7 +657,7 @@
 ;;   :custom
 ;;   (message "HERE python-mode custom")
 ;;   (setq lsp-diagnostics-provider :none)
-;;   (python-shell-interpreter "/home/walmes/anaconda/bin/python3"))
+;;   (python-shell-interpreter "/home/walmes/miniconda3/bin/python3"))
 
 (use-package! elpy
   :init
@@ -664,9 +669,18 @@
     (define-key python-mode-map [S-f5] 'company-complete)
     (define-key python-mode-map [S-f6] 'complete-symbol)
     ;; Elpy will install RPC dependencies automatically.
-    (setq elpy-rpc-python-command "/home/walmes/anaconda/bin/python3")
-    (setq python-shell-interpreter "/home/walmes/anaconda/bin/python3")
+    (setq elpy-rpc-python-command "/home/walmes/miniconda3/bin/python3")
+    (setq python-shell-interpreter "/home/walmes/miniconda3/bin/python3")
     ))
+
+;; Instalado com M-x list-package-list RET e instalar da lista.
+;; $ conda activate
+;; $ conda install -c conda-forge pyright
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp))))  ; or lsp-deferred
 
 ;; To list conda envs.
 ;;   cd anaconda
@@ -675,7 +689,7 @@
 (use-package pyvenv
   :ensure t
   :init
-  (setenv "WORKON_HOME" "~/anaconda"))
+  (setenv "WORKON_HOME" "~/miniconda3"))
 
 ;; ;; https://enzuru.medium.com/helpful-emacs-python-mode-hooks-especially-for-type-hinting-c4b70b9b2216
 ;; (add-hook
@@ -686,9 +700,9 @@
 ;;    (anaconda-eldoc-mode)
 ;;    (flycheck-mode -1)        ;; Disable flycheck.
 ;;    (flymake-mode -1)
-;;    (setq lsp-diagnostics-provider :none)
+;;    (setq lsp-diagnostics-pr-ovider :none)
 ;;    ;; This configures `pyls' language server.
-;;    ;; (setq lsp-clients-python-command "/home/walmes/anaconda/bin/pyls")
+;;    ;; (setq lsp-clients-python-command "/home/walmes/miniconda3/bin/pyls")
 ;;    ;; (setq lsp-pyls-plugins-pylint-enabled nil)
 ;;    ;; (setq lsp-pyls-plugins-autopep8-enabled nil)
 ;;    ;; (setq lsp-pyls-plugins-yapf-enabled t)
@@ -697,21 +711,7 @@
 ;;    ;; (local-set-key (kbd "C-x C-w") 'anaconda-mode-find-definitions)
 ;;    ))
 
-;; (use-package! lsp-python-ms
-;;   :config
-;;   ;; these hooks can't go in the :hook section since lsp-restart-workspace
-;;   ;; is not available if lsp isn't active
-;;   ;; (setq lsp-python-ms-extra-paths [ "/home/walmes/anaconda/bin/python3" ])
-;;   ;; (flycheck-mode nil)
-;;   ;; (flymake-mode nil)
-;;   ;; (setq lsp-diagnostics-provider :none)
-;;   (message "HERE lsp-python-ms")
-;;   (add-hook 'conda-postactivate-hook
-;;             (lambda () (lsp-restart-workspace)))
-;;   (add-hook 'conda-postdeactivate-hook
-;;             (lambda () (lsp-restart-workspace))))
-
-;; https://www.reddit.com/r/emacs/comments/hkshob/save_correct_condaenv_for_project/fwxty9v?utm_source=share&utm_medium=web2x&context=3
+;; https://www.reddit.com/r/emacs/comments/hkshob/save_correct_condaenv_for_project/fwxty9v
 ;;
 ;; 1. Set `conda-project-env-name' as a directory local variable. (With
 ;;    projectile you could use the `projectile-edit-dir-locals'
@@ -724,8 +724,8 @@
 (use-package! conda
   :init
   (message "HERE conda init")
-  (setq conda-anaconda-home (expand-file-name "~/anaconda"))
-  (setq conda-env-home-directory (expand-file-name "~/anaconda"))
+  (setq conda-anaconda-home (expand-file-name "~/miniconda3"))
+  (setq conda-env-home-directory (expand-file-name "~/miniconda3"))
   :config
   (message "HERE conda config")
   (conda-env-initialize-interactive-shells)
