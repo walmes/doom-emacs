@@ -657,11 +657,12 @@
 ;;   :custom
 ;;   (message "HERE python-mode custom")
 ;;   (setq lsp-diagnostics-provider :none)
-;;   (python-shell-interpreter "/home/walmes/miniconda3/bin/python3"))
+;;   (python-shell-interpreter "/home/walmes/anaconda3/bin/python3"))
 
 (use-package! elpy
   :init
   (elpy-enable)
+  :hook (python-mode . lsp-deferred)
   :config
   (progn
     ;; (message "HERE elpy")
@@ -669,18 +670,9 @@
     (define-key python-mode-map [S-f5] 'company-complete)
     (define-key python-mode-map [S-f6] 'complete-symbol)
     ;; Elpy will install RPC dependencies automatically.
-    (setq elpy-rpc-python-command "/home/walmes/miniconda3/bin/python3")
-    (setq python-shell-interpreter "/home/walmes/miniconda3/bin/python3")
+    (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3")
+    (setq python-shell-interpreter "/home/walmes/anaconda3/bin/python3")
     ))
-
-;; Instalado com M-x list-package-list RET e instalar da lista.
-;; $ conda activate
-;; $ conda install -c conda-forge pyright
-(use-package lsp-pyright
-  :ensure t
-  :hook (python-mode . (lambda ()
-                          (require 'lsp-pyright)
-                          (lsp))))  ; or lsp-deferred
 
 ;; To list conda envs.
 ;;   cd anaconda
@@ -689,7 +681,24 @@
 (use-package pyvenv
   :ensure t
   :init
-  (setenv "WORKON_HOME" "~/miniconda3"))
+  (setenv "WORKON_HOME" "~/anaconda3"))
+
+;; Instalado com M-x list-package-list RET e instalar da lista.
+;; $ conda activate
+;; $ conda install -c conda-forge pyright
+
+;; (use-package lsp-pyright
+;;   :ensure t
+;;   :after (python lsp-mode)
+;;   :custom
+;;   (lsp-pyright-venv-path (getenv "WORKON_HOME"))
+;;   :config
+;;   (setq lsp-pyright-python-executable-cmd "/home/walmes/anaconda3/bin/python3")
+;;   (setq lsp-pyright-auto-import-completions t)
+;;   (setq lsp-pyright-auto-search-paths t)
+;;   :hook (python-mode . (lambda ()
+;;                           (require 'lsp-pyright)
+;;                           (lsp))))
 
 ;; ;; https://enzuru.medium.com/helpful-emacs-python-mode-hooks-especially-for-type-hinting-c4b70b9b2216
 ;; (add-hook
@@ -702,7 +711,7 @@
 ;;    (flymake-mode -1)
 ;;    (setq lsp-diagnostics-pr-ovider :none)
 ;;    ;; This configures `pyls' language server.
-;;    ;; (setq lsp-clients-python-command "/home/walmes/miniconda3/bin/pyls")
+;;    ;; (setq lsp-clients-python-command "/home/walmes/anaconda3/bin/pyls")
 ;;    ;; (setq lsp-pyls-plugins-pylint-enabled nil)
 ;;    ;; (setq lsp-pyls-plugins-autopep8-enabled nil)
 ;;    ;; (setq lsp-pyls-plugins-yapf-enabled t)
@@ -724,8 +733,8 @@
 (use-package! conda
   :init
   (message "HERE conda init")
-  (setq conda-anaconda-home (expand-file-name "~/miniconda3"))
-  (setq conda-env-home-directory (expand-file-name "~/miniconda3"))
+  (setq conda-anaconda-home (expand-file-name "~/anaconda3"))
+  (setq conda-env-home-directory (expand-file-name "~/anaconda3"))
   :config
   (message "HERE conda config")
   (conda-env-initialize-interactive-shells)

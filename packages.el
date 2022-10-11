@@ -91,6 +91,8 @@
 (package! lsp-python-ms :disable t) ;; Turn off.
 ;; (package! lsp-pyright)
 
+;; (package! exec-path-from-shell)
+
 ;; Needs `sudo apt-get install virtualenv'.
 ;; (package! lsp-jedi)
 ;; (package! jedi)
