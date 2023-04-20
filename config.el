@@ -850,6 +850,7 @@
   (add-to-list 'hl-todo-keyword-faces '("OKAY"        success bold))
   (add-to-list 'hl-todo-keyword-faces '("GOOD"        success bold))
   (add-to-list 'hl-todo-keyword-faces '("SOLVED"      success bold))
+  (add-to-list 'hl-todo-keyword-faces '("OPTIONAL"    success bold))
   (add-to-list 'hl-todo-keyword-faces '("WALMES"    . hl-todo-good-words))
   )
 
