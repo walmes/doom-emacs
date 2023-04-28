@@ -699,7 +699,6 @@
     )
   )
 
-
 ;;----------------------------------------------------------------------
 ;; Improved version of occur. Quick navigation.
 ;; http://ignaciopp.wordpress.com/2009/06/10/customizing-emacs-occur/
@@ -828,6 +827,7 @@
  (lambda ()
    (local-set-key (kbd "C-c i i") 'wz-insert-chunk)
    (local-set-key (kbd "<C-f1>")  'wz-ess-open-html-documentation)
+   (local-set-key (kbd "<C-f4>")  'wz-ess-insert-function-args)
    (local-set-key (kbd "<f6>")    'wz-polymode-eval-R-chunk)
    (local-set-key (kbd "<f7>")    'wz-ess-break-or-join-lines-wizard)
    (local-set-key (kbd "S-<f6>")  'wz-polymode-eval-R-chunk-and-next)
