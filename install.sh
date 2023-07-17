@@ -2,6 +2,7 @@
 # Install Doom-Emacs and add personal configuration.
 
 # Keep a copy of `.emacs.d/`.
+rm -rf ~/OLD.emacs.d/
 mv -v ~/.emacs.d ~/OLD.emacs.d/
 
 # Install Doom-Emacs.
@@ -15,6 +16,13 @@ git clone git@github.com:walmes/doom-emacs.git ~/.doom.d/
 
 # Upgrade Doom-emacs.
 ~/.emacs.d/bin/doom upgrade
+
+#-----------------------------------------------------------------------
+# Remove Emacs.
+
+sudo apt purge `dpkg --get-selections | grep emacs | cut -f1`
+
+sudo apt-get install emacs28
 
 #-----------------------------------------------------------------------
 # Install some packages manually.

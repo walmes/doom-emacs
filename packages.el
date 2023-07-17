@@ -80,6 +80,9 @@
            ;; https://github.com/tecosaur/screenshot/issues/11
            :build (:not compile)))
 
+(package! polymode)
+(package! poly-R)
+
 ;; pyls.
 ;; pip install --user python-language-server[all]
 
