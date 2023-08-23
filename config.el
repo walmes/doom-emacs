@@ -627,98 +627,56 @@
 ;; Python as a IDE with REPL.
 
 ;; ATTENTION: adds to yout `~/.bachrc' file
-;; export PATH="$HOME/anaconda/bin:$PATH"
+;; $ export PATH="$HOME/anaconda/bin:$PATH"
 
-;; Requirements on:
-;; https://github.com/hlissner/doom-emacs/tree/develop/modules/lang/python
+;; To install .NET and use MS Python Language Server (`mypyls').
+;; https://dotnet.microsoft.com/en-us/download
+;; $ sudo snap install --classic dotnet-sdk
+;;
+;; Install `mypyls'.
+;; $ cd ~/Documents/
+;; $ git clone https://github.com/Microsoft/python-language-server.git
+;; $ cd python-language-server/src/LanguageServer/Impl
+;; $ dotnet publish -c Release -r linux-x64
+;; $ chmod a+x $(git rev-parse --show-toplevel)/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer
+;;
+;; Adds the following configuration at `config.el`.
+;; (setq lsp-python-ms-executable
+;;       "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer")
+
+(use-package! elpy
+  :init
+  (elpy-enable)
+  ;; (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
+  :hook
+  (python-mode . lsp-deferred)
+  :config
+  ;; (message "HERE elpy")
+  (setq python-indent-offset 4)
+  (define-key python-mode-map [S-f5] 'company-complete)
+  (define-key python-mode-map [S-f6] 'complete-symbol)
+  ;; Elpy will install RPC dependencies automatically.
+  (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3")
+  (setq python-shell-interpreter "/home/walmes/anaconda3/bin/python3")
+  ;; ATTENTION: Third party software installed apart.
+  (setq lsp-python-ms-executable
+        "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer")
+  )
+
+;; To list conda envs.
 ;;   cd anaconda
 ;;   source activate
-;;   pip install pytest nose black pyflakes isort
-;;   pip install --user python-language-server[all]
-;;   pip install pyright
-;;   conda deactivate
-;; On Emacs:
-;;   M-x lsp-install-server RET mspyls
-;;   M-x lsp-python-ms-setup RET
-;; https://github.com/microsoft/pyright
+;;   conda info --envs
+;; (use-package pyvenv
+;;   :ensure t
+;;   :init
+;;   (setenv "WORKON_HOME" "~/anaconda3"))
 
 ;; ATTENTION:
 ;; Choose an anaconda Env:
 ;;   M-x conda-env-activate base
 ;; Restart LSP:
 ;;   M-x lsp ...or... M-x lsp-restart-workspace
-
-;; (use-package python-mode
-;;   :init
-;;   (message "HERE python-mode init")
-;;   :hook
-;;   (message "HERE python-mode hook")
-;;   (python-mode . lsp-deferred)
-;;   :custom
-;;   (message "HERE python-mode custom")
-;;   (setq lsp-diagnostics-provider :none)
-;;   (python-shell-interpreter "/home/walmes/anaconda3/bin/python3"))
-
-(use-package! elpy
-  :init
-  (elpy-enable)
-  :hook (python-mode . lsp-deferred)
-  :config
-  (progn
-    ;; (message "HERE elpy")
-    (setq python-indent-offset 4)
-    (define-key python-mode-map [S-f5] 'company-complete)
-    (define-key python-mode-map [S-f6] 'complete-symbol)
-    ;; Elpy will install RPC dependencies automatically.
-    (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3")
-    (setq python-shell-interpreter "/home/walmes/anaconda3/bin/python3")
-    ))
-
-;; To list conda envs.
-;;   cd anaconda
-;;   source activate
-;;   conda info --envs
-(use-package pyvenv
-  :ensure t
-  :init
-  (setenv "WORKON_HOME" "~/anaconda3"))
-
-;; Instalado com M-x list-package-list RET e instalar da lista.
-;; $ conda activate
-;; $ conda install -c conda-forge pyright
-
-;; (use-package lsp-pyright
-;;   :ensure t
-;;   :after (python lsp-mode)
-;;   :custom
-;;   (lsp-pyright-venv-path (getenv "WORKON_HOME"))
-;;   :config
-;;   (setq lsp-pyright-python-executable-cmd "/home/walmes/anaconda3/bin/python3")
-;;   (setq lsp-pyright-auto-import-completions t)
-;;   (setq lsp-pyright-auto-search-paths t)
-;;   :hook (python-mode . (lambda ()
-;;                           (require 'lsp-pyright)
-;;                           (lsp))))
-
-;; ;; https://enzuru.medium.com/helpful-emacs-python-mode-hooks-especially-for-type-hinting-c4b70b9b2216
-;; (add-hook
-;;  'python-mode-hook
-;;  (lambda ()
-;;    ;; (message "HERE python-mode-hook")
-;;    (anaconda-mode)
-;;    (anaconda-eldoc-mode)
-;;    (flycheck-mode -1)        ;; Disable flycheck.
-;;    (flymake-mode -1)
-;;    (setq lsp-diagnostics-pr-ovider :none)
-;;    ;; This configures `pyls' language server.
-;;    ;; (setq lsp-clients-python-command "/home/walmes/anaconda3/bin/pyls")
-;;    ;; (setq lsp-pyls-plugins-pylint-enabled nil)
-;;    ;; (setq lsp-pyls-plugins-autopep8-enabled nil)
-;;    ;; (setq lsp-pyls-plugins-yapf-enabled t)
-;;    ;; (setq lsp-pyls-plugins-pyflakes-enabled nil)
-;;    ;; (local-set-key (kbd "C-x C-d") 'anaconda-mode-show-doc)
-;;    ;; (local-set-key (kbd "C-x C-w") 'anaconda-mode-find-definitions)
-;;    ))
 
 ;; https://www.reddit.com/r/emacs/comments/hkshob/save_correct_condaenv_for_project/fwxty9v
 ;;
@@ -732,17 +690,20 @@
 
 (use-package! conda
   :init
-  (message "HERE conda init")
+  ;; (message "HERE conda init")
   (setq conda-anaconda-home (expand-file-name "~/anaconda3"))
   (setq conda-env-home-directory (expand-file-name "~/anaconda3"))
   :config
-  (message "HERE conda config")
+  ;; (message "HERE conda config")
   (conda-env-initialize-interactive-shells)
-  (conda-env-initialize-eshell))
+  (conda-env-initialize-eshell)
+  ;; (conda-env-activate 'getenv "CONDA_DEFAULT_ENV")
+  (conda-env-autoactivate-mode t)
+  )
 
 (use-package! anaconda-mode
   :init
-  (message "HERE anaconda-mode")
+  ;; (message "HERE anaconda-mode")
   (add-hook 'python-mode-hook 'anaconda-mode)
   (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
 
@@ -823,7 +784,7 @@
   ("C-c l m" . hl-todo-previous)
   ("C-c l n" . hl-todo-next)
   :config
-  (message "final do arquivo")
+  ;; (message "final do arquivo")
   (global-hl-todo-mode t)
   (add-to-list 'hl-todo-keyword-faces '("IMPROVE"     font-lock-constant-face bold))
   (add-to-list 'hl-todo-keyword-faces '("QUESTION"    font-lock-constant-face bold))
@@ -833,7 +794,6 @@
   (add-to-list 'hl-todo-keyword-faces '("COMMENT"     font-lock-keyword-face bold))
   (add-to-list 'hl-todo-keyword-faces '("TIP"         font-lock-keyword-face bold))
   (add-to-list 'hl-todo-keyword-faces '("TRICK"       font-lock-keyword-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("STEP"        font-lock-type-face bold))
   (add-to-list 'hl-todo-keyword-faces '("DANGER"      error bold))
   (add-to-list 'hl-todo-keyword-faces '("STOP"        error bold))
   (add-to-list 'hl-todo-keyword-faces '("FAIL"        error bold))
@@ -843,6 +803,7 @@
   (add-to-list 'hl-todo-keyword-faces '("DEBUG"       warning bold))
   (add-to-list 'hl-todo-keyword-faces '("IMPORTANT"   warning bold))
   (add-to-list 'hl-todo-keyword-faces '("ATTENTION"   warning bold))
+  (add-to-list 'hl-todo-keyword-faces '("CAUTION"     warning bold))
   (add-to-list 'hl-todo-keyword-faces '("OBS"         warning bold))
   (add-to-list 'hl-todo-keyword-faces '("PROBLEM"     warning bold))
   (add-to-list 'hl-todo-keyword-faces '("DISCLAIMER"  warning bold))
