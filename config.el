@@ -721,6 +721,19 @@
 ;;     (add-to-list 'lsp-enabled-clients 'jedi)))
 
 ;;----------------------------------------------------------------------
+;; Github Copilot.
+;; https://github.com/zerolfx/copilot.el#example-for-doom-emacs
+
+;; accept completion from copilot and fallback to company
+(use-package! copilot
+  :hook (prog-mode . copilot-mode)
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("C-TAB" . 'copilot-accept-completion-by-word)
+              ("C-<tab>" . 'copilot-accept-completion-by-word)))
+
+;;----------------------------------------------------------------------
 ;; Latex extensions.
 
 ;; Disable `latex' module because it brings a bug related to

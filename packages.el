@@ -83,6 +83,14 @@
 (package! polymode)
 (package! poly-R)
 
+;; https://github.com/zerolfx/copilot.el#example-for-doom-emacs
+;;
+;; Update NodeJS for Copilot.
+;; $ curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+;; $ sudo apt-get install -y nodejs
+(package! copilot
+  :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
+
 ;; pyls.
 ;; pip install --user python-language-server[all]
 
