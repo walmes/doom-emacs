@@ -91,6 +91,19 @@
 (package! copilot
   :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
 
+(package! org-present
+  :recipe (:host github :repo "rlister/org-present"))
+
+(package! visual-fill-column)
+
+;; (package! c3po
+;;   :recipe (:host github :repo "d1egoaz/c3po.el"))
+
+;; (package! chatgpt
+;;   :recipe (:host github :repo "emacs-openai/chatgpt"))
+
+;; (package! gptel)
+
 ;; pyls.
 ;; pip install --user python-language-server[all]
 

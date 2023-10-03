@@ -795,6 +795,17 @@
 
 ;;----------------------------------------------------------------------
 
+(defun wz-disable-fly-modes ()
+  "Disable flymake and flycheck modes."
+  (interactive)
+  (when flymake-mode
+    (flymake-mode -1))
+  (when flycheck-mode
+    (flycheck-mode -1))
+  (message "Modes flymake and flycheck disabled."))
+
+;;----------------------------------------------------------------------
+
 (define-key global-map "\M-Q" 'unfill-region)
 (define-key global-map (kbd "C-S-o") 'my-occur)
 (define-key occur-mode-map (kbd "q") 'occur-mode-quit)

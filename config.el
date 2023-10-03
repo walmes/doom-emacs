@@ -47,18 +47,30 @@
 ;;
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or
 ;; xlfd font string. You generally only need these two:
-;; (setq doom-font
-;;       (font-spec :family "monospace"
-;;                  :size 12
-;;                  :weight 'semi-light)
-;;       doom-variable-pitch-font
-;;       (font-spec :family "sans"
-;;                  :size 13))
+;; (setq ;; doom-font (font-spec :family "Spline Sans Mono" :weight 'light)
+;;       doom-font (font-spec :family "Fira Mono" :weight 'light)
+;;       ;; doom-big-font (font-spec :family "Fira Mono" :weight 'normal :size 21)
+;;       doom-big-font (font-spec :size 21)
+;;       ;; doom-variable-pitch-font (font-spec :family "Montserrat" :size 13)
+;;       )
+
+;; NOTE: to list all fonts available in your system, run on terminal.
+;;   fc-list | grep FiraCode
+;; (:family "Fira Code" :foundry "CTDB" :slant normal :weight normal :height 128 :width normal)
+;; (:family "JetBrains Mono" :foundry "JB" :slant normal :weight extra-light :height 128 :width normal)
+
+;; (defvar doom-big-font-increment 3)
 
 ;; There are two ways to load a theme. Both assume the theme is
 ;; installed and available. You can either set `doom-theme' or manually
 ;; load a theme with the `load-theme' function. This is the default:
 (setq doom-theme 'doom-one)
+;; (setq doom-theme 'doom-bluloco-dark)
+;; (setq doom-theme 'doom-horizon)
+;; (setq doom-theme 'doom-city-lights)
+;; (setq doom-theme 'doom-tokyo-night)
+;; (setq doom-theme 'doom-ayu-dark)
+
 ;; (use-package! spacemacs-theme
 ;;   :init (load-theme 'spacemacs-dark t))
 
@@ -136,6 +148,10 @@
             inferior-python-mode-hook))
   (set (make-local-variable 'scroll-margin) 0)
   )
+
+;; Let the desktop background show through.
+;; (set-frame-parameter (selected-frame) 'alpha '(97 . 100))
+;; (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
 
 ;;----------------------------------------------------------------------
 ;; Key bindings.
@@ -298,6 +314,64 @@
   (setq screenshot-schemes
         '(("current-directory" :dir default-directory)))
   (setq screenshot-default-scheme "current-directory"))
+
+;;----------------------------------------------------------------------
+;; Org Mode.
+
+;; (use-package! org
+;;   :config
+;;   (progn
+;;     (require 'orgalist)
+;;     (orgalist-mode t)
+;;     )
+;;   )
+
+;;----------------------------------------------------------------------
+;; Org Present.
+;; https://elpa.nongnu.org/nongnu/org-present.html
+;; TODO: import configuration at https://systemcrafters.net/emacs-tips/presentations-with-org-present/
+
+(use-package! visual-fill-column
+  :config
+  ;; Configure fill width.
+  (setq visual-fill-column-center-text t)
+  ;; (setq visual-fill-column-width 150
+  ;;       visual-fill-column-center-text t)
+  )
+
+;; Unfold the current entry and show only direct subheadings of the
+;; slide but don't expand them.
+;; (defun my/org-present-prepare-slide (buffer-name heading)
+;;   ;; Show only top-level headlines
+;;   (org-overview)
+;;   ;; Unfold the current entry
+;;   (org-show-entry)
+;;   ;; Show only direct subheadings of the slide but don't expand them
+;;   (org-show-children))
+;; (add-hook 'org-present-after-navigate-functions 'my/org-present-prepare-slide)
+
+;; Minimal configuration.
+(use-package! org-present
+  :config
+  (progn
+    (add-hook 'org-present-mode-hook
+              '(lambda ()
+                 (org-display-inline-images)
+                 (setq header-line-format " ")
+                 (visual-fill-column-mode t)
+                 (visual-line-mode t)
+                 )
+              )
+    (add-hook 'org-present-mode-quit-hook
+              (lambda ()
+                (org-remove-inline-images)
+                (setq header-line-format nil)
+                (visual-fill-column-mode nil)
+                (visual-line-mode nil)
+                )
+              )
+    )
+  )
 
 ;;----------------------------------------------------------------------
 ;; MarkDown configuration.
@@ -732,6 +806,29 @@
               ("TAB" . 'copilot-accept-completion)
               ("C-TAB" . 'copilot-accept-completion-by-word)
               ("C-<tab>" . 'copilot-accept-completion-by-word)))
+
+;;----------------------------------------------------------------------
+;; Unleash the power of the Force using ChatGPT inside Emacs.
+;; https://github.com/d1egoaz/c3po.el
+
+;; (use-package! c3po
+;;   :config
+;;   (setq c3po-api-key "<api-key>"))
+
+;;----------------------------------------------------------------------
+;; https://github.com/emacs-openai/openai#-usage
+
+;; (use-package! chatgpt
+;;   :config
+;;   (setq openai-key "<api-key>"))
+
+;;----------------------------------------------------------------------
+;; GPTel is a simple, no-frills ChatGPT client for Emacs.
+;; https://github.com/karthink/gptel
+
+;; (use-package! gptel
+;;   :config
+;;   (setq! gptel-api-key "<api-key>"))
 
 ;;----------------------------------------------------------------------
 ;; Latex extensions.
