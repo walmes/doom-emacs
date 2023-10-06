@@ -593,7 +593,7 @@
       (flycheck-mode -1)        ;; Disable flycheck/lintr.
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
-      (ess-toggle-underscore nil)
+      ;; (ess-toggle-underscore nil)
       ;;
       ;; https://stackoverflow.com/questions/7502540/make-emacs-ess-follow-r-style-guide
       ;; (ess-set-style 'C++)
