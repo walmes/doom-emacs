@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Fix error in color.
+# uuid:
+# key: ^
+# condition: t
+# --
+
