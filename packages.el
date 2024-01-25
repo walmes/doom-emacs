@@ -91,10 +91,18 @@
 (package! copilot
   :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "dist")))
 
+;; https://codeium.com/blog/codeium-copilot-alternative-in-emacs
+;; https://codeium.com/emacs_tutorial
+;; https://github.com/Exafunction/codeium.el
+;; (package! codeium
+;;   :recipe (:host github :repo "Exafunction/codeium.el"))
+
 (package! org-present
   :recipe (:host github :repo "rlister/org-present"))
 
 (package! visual-fill-column)
+
+(package! xterm-color)
 
 ;; (package! c3po
 ;;   :recipe (:host github :repo "d1egoaz/c3po.el"))
