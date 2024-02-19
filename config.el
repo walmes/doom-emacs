@@ -298,11 +298,32 @@
     ))
 
 ;;----------------------------------------------------------------------
-;; Web-mode.
+;; Treemacs and icons.
 
 (use-package! treemacs
   :config
   (setq treemacs-is-never-other-window nil))
+
+(use-package! treemacs-nerd-icons
+  :config
+  (treemacs-load-theme "nerd-icons"))
+
+(use-package! nerd-icons-dired
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+
+;;----------------------------------------------------------------------
+;; imenu-list
+
+(use-package! imenu-list
+  :config
+  (setq imenu-list-focus-after-activation t)
+  (setq imenu-list-auto-resize t)
+  (setq imenu-list-size 0.2)
+  (setq imenu-list-position 'left)
+  :bind
+  ("<f12>" . imenu-list-smart-toggle)
+)
 
 ;;----------------------------------------------------------------------
 ;; Uses `M-x screeshot' to take a screenshot of a region or buffer.
@@ -498,7 +519,9 @@
   (lsp-ui-sideline-ignore-duplicate t)
   (lsp-ui-sideline-show-code-actions nil)
   (lsp-ui-doc-show-with-cursor nil)
+  (lsp-headerline-breadcrumb-enable t)
   :config
+  (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
   (map! :map lsp-ui-mode-map
         ;; ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
         ;; ([remap xref-find-references] . lsp-ui-peek-find-references)

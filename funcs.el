@@ -805,6 +805,44 @@
   (message "Modes flymake and flycheck disabled."))
 
 ;;----------------------------------------------------------------------
+;; To solve problem with font-face.
+
+;; (defun wz-ess-insert-thing-and-press-enter ()
+;;   "Insert 'hello world' in the *R* buffer and press Enter."
+;;   (interactive)
+;;   (with-current-buffer "*R*"
+;;     (insert "")
+;;     (inferior-ess-send-input)
+;;     )
+;;   )
+
+;; (defun wz-ess-insert-thing-and-press-enter ()
+;;   "Fix problem with font face. Solution based on: https://github.com/emacs-ess/ESS/issues/1193"
+;;   (interactive)
+;;   (with-current-buffer "*R*"
+;;     (insert "invisible(addTaskCallback(function(...) { if (interactive()) { try(cat(crayon::reset('')), silent = TRUE) } else { TRUE }}, name = 'ansi_reset'))")
+;;     (inferior-ess-send-input)
+;;     )
+;;   )
+
+;; ;; Bind a key to the function (optional)
+;; (global-set-key (kbd "C-<dead-circumflex>")
+;;                 'wz-ess-insert-thing-and-press-enter)
+
+;;----------------------------------------------------------------------
+
+(defun wz-cancel-on-inferior-ess-buffer ()
+  "Switch to the inferior ESS buffer, interrupt any running job,
+   and switch back to the script buffer."
+  (interactive)
+  (ess-switch-to-inferior-or-script-buffer t)
+  (comint-interrupt-subjob)
+  (ess-switch-to-inferior-or-script-buffer t))
+
+(eval-after-load 'ess-mode
+  '(define-key ess-mode-map (kbd "C-<escape>") 'wz-cancel-on-inferior-ess-buffer))
+
+;;----------------------------------------------------------------------
 
 (define-key global-map "\M-Q" 'unfill-region)
 (define-key global-map (kbd "C-S-o") 'my-occur)

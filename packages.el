@@ -68,6 +68,14 @@
 (package! yasnippet)
 (package! quarto-mode)
 
+(package! all-the-icons)
+;; M-x all-the-icons-install-fonts
+
+(package! nerd-icons)
+;; M-x nerd-icons-install-fonts
+
+(package! treemacs-nerd-icons :pin "9876cb478145a0ec4e36f64ff6583f3de7126216")
+
 (package! bookmark+
   :recipe (:host github
            :repo "emacsmirror/bookmark-plus"))
