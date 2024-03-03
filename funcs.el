@@ -705,6 +705,20 @@
   (ess-roxy-newline)
   (ess-indent-or-complete))
 
+(defun wz-ess-one-argument-by-line-and-indent-region (start end)
+  "Break lines after commas, open parentheses, and closing parentheses in the selected region, excluding strings."
+  (interactive "r")
+  (save-excursion
+    (goto-char start)
+    (while (re-search-forward "[,()]" end t)
+      (let ((in-string (nth 3 (syntax-ppss)))
+            (next-char (char-after (match-end 0))))
+        (unless (or in-string (eq next-char ?\n))
+          (replace-match (concat (match-string 0) "\n")))))
+    (indent-region start end)
+    )
+  )
+
 ;;----------------------------------------------------------------------
 ;; Improved version of occur. Quick navigation.
 ;; http://ignaciopp.wordpress.com/2009/06/10/customizing-emacs-occur/
@@ -902,7 +916,7 @@
    (local-set-key (kbd "M-j")     'wz-ess-newline-indented)
    (local-set-key (kbd "M-j")     'wz-ess-newline-indented)
    (local-set-key (kbd "<S-return>") 'wz-ess-newline-indented)
-
+   (local-set-key (kbd "<backtab>")  'wz-ess-one-argument-by-line-and-indent-region)
    ;; (local-set-key (kbd "C-c C-h") 'ess-edit-indent-call-sophisticatedly)
    (local-set-key (kbd "C-M-|")
                   'ess-indent-region-with-formatR-tidy-source)
