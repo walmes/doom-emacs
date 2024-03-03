@@ -126,7 +126,7 @@
 (setq-default fill-column 72)       ;; Column width.
 
 ;; Highlight whitespace.
-(global-whitespace-mode +1)
+(global-whitespace-mode t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (setq whitespace-line-column fill-column)
 (setq whitespace-style '(face lines-tail trailing tabs empty))
@@ -311,6 +311,46 @@
 (use-package! nerd-icons-dired
   :hook
   (dired-mode . nerd-icons-dired-mode))
+
+;;----------------------------------------------------------------------
+;; Neotree.
+
+;; (after! doom-themes
+;;   (remove-hook 'doom-load-theme-hook #'doom-themes-neotree-config))
+;;
+;; (use-package! neotree
+;;   :config
+;;   (setq neo-theme 'icons)
+;;   ;; (setq doom-neotree-file-icons t)
+;;   ;; (setq doom-themes-neotree-file-icons t)
+;;   ;; (setq doom-neotree-enable-variable-pitch nil)
+;;   )
+
+;;----------------------------------------------------------------------
+;; Dired sidebar.
+;; https://github.com/jojojames/dired-sidebar
+
+(use-package! dired-sidebar
+  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
+  ;; :ensure t
+  :commands (dired-sidebar-toggle-sidebar)
+  :init
+  (add-hook 'dired-sidebar-mode-hook
+            (lambda ()
+              (unless (file-remote-p default-directory)
+                (auto-revert-mode))))
+  :config
+  (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
+  (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
+  (setq dired-sidebar-subtree-line-prefix "__")
+  (setq dired-sidebar-theme 'ascii)
+  ;; (setq dired-sidebar-theme 'nerd)
+  ;; (setq dired-sidebar-theme 'icons)
+  ;; (setq dired-sidebar-theme 'none)
+  ;; (setq dired-sidebar-theme 'vscode)
+  (setq dired-sidebar-use-term-integration t)
+  (setq dired-sidebar-use-custom-font nil)
+)
 
 ;;----------------------------------------------------------------------
 ;; imenu-list

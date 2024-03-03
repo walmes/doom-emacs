@@ -69,12 +69,20 @@
 (package! quarto-mode)
 
 (package! all-the-icons)
-;; M-x all-the-icons-install-fonts
+;; TODO M-x all-the-icons-install-fonts
 
 (package! nerd-icons)
-;; M-x nerd-icons-install-fonts
+;; TODO M-x nerd-icons-install-fonts
 
 (package! treemacs-nerd-icons :pin "9876cb478145a0ec4e36f64ff6583f3de7126216")
+
+;; https://github.com/jojojames/dired-sidebar/blob/master/dired-sidebar.el
+(package! dired-sidebar)
+
+;; https://github.com/wyuenho/all-the-icons-dired
+(package! all-the-icons-dired
+  :recipe (:host github
+           :repo "wyuenho/all-the-icons-dired"))
 
 (package! bookmark+
   :recipe (:host github
