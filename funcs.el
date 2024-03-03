@@ -699,6 +699,12 @@
     )
   )
 
+(defun wz-ess-newline-indented ()
+  "Executa ess-roxy-newline e ess-indent-or-complete."
+  (interactive)
+  (ess-roxy-newline)
+  (ess-indent-or-complete))
+
 ;;----------------------------------------------------------------------
 ;; Improved version of occur. Quick navigation.
 ;; http://ignaciopp.wordpress.com/2009/06/10/customizing-emacs-occur/
@@ -893,6 +899,10 @@
    (local-set-key (kbd "C-:")     'wz-ess-find-and-insert-namespace)
    (local-set-key (kbd "<S-f9>")  'wz-ess-backward-R-assigment-symbol)
    (local-set-key (kbd "<S-f10>") 'wz-ess-forward-R-assigment-symbol)
+   (local-set-key (kbd "M-j")     'wz-ess-newline-indented)
+   (local-set-key (kbd "M-j")     'wz-ess-newline-indented)
+   (local-set-key (kbd "<S-return>") 'wz-ess-newline-indented)
+
    ;; (local-set-key (kbd "C-c C-h") 'ess-edit-indent-call-sophisticatedly)
    (local-set-key (kbd "C-M-|")
                   'ess-indent-region-with-formatR-tidy-source)
