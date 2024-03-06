@@ -778,7 +778,7 @@
 ;; Python as a IDE with REPL.
 
 ;; ATTENTION: adds to yout `~/.bachrc' file
-;; $ export PATH="$HOME/anaconda/bin:$PATH"
+;; $ export PATH="$HOME/anaconda3/bin:$PATH"
 
 ;; To install .NET and use MS Python Language Server (`mypyls').
 ;; https://dotnet.microsoft.com/en-us/download
@@ -795,24 +795,43 @@
 ;; (setq lsp-python-ms-executable
 ;;       "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer")
 
-(use-package! elpy
-  :init
-  (elpy-enable)
-  ;; (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
-  :hook
-  (python-mode . lsp-deferred)
+(use-package! python
+  ;; :hook
+  ;; (python-mode . lsp-deferred)
+  ;; :bind (:map python-mode-map
+  ;;             ;; Use this if not usiung Elpy.
+  ;;             ;; ("C-<return>" . python-shell-send-statement)
+  ;;             )
   :config
-  ;; (message "HERE elpy")
   (setq python-indent-offset 4)
-  (define-key python-mode-map [S-f5] 'company-complete)
-  (define-key python-mode-map [S-f6] 'complete-symbol)
-  ;; Elpy will install RPC dependencies automatically.
-  (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3")
   (setq python-shell-interpreter "/home/walmes/anaconda3/bin/python3")
+  ;; (define-key python-mode-map [S-f5] 'company-complete)
+  ;; (define-key python-mode-map [S-f6] 'complete-symbol)
   ;; ATTENTION: Third party software installed apart.
   (setq lsp-python-ms-executable
         "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer")
   )
+
+;; Elpy, the Emacs Python IDE. Elpy is an Emacs package to bring
+;; powerful Python editing to Emacs. It combines and configures a number
+;; of other packages, both written in Emacs Lisp as well as Python.
+;; https://github.com/jorgenschaefer/elpy
+;;
+;; Main commands
+;; C-c C-c: evaluates the buffer or region.
+;; C-RET: evaluates the block.
+;; C-c C-z: switches between your script and the interactive shell.
+;; C-c C-d: displays documentation for the thing under cursor.
+(use-package! elpy
+  :init
+  (elpy-enable)
+  :config
+  ;; Elpy will install RPC dependencies automatically.
+  (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3")
+  )
+
+;; Check the backend enabled.
+;; (describe-variable 'company-backends)
 
 ;; To list conda envs.
 ;;   cd anaconda
@@ -839,6 +858,9 @@
 ;;    set. (Or enable `conda-env-autoactivate-mode' to automatically
 ;;    activate it.)
 
+;; A conda environment manager, assuming the use of Anaconda and the
+;; `conda` tool. See https://github.com/necaris/conda.el for more
+;; details. https://melpa.org/#/conda.
 (use-package! conda
   :init
   ;; (message "HERE conda init")
@@ -852,11 +874,18 @@
   (conda-env-autoactivate-mode t)
   )
 
+;; Code navigation, documentation lookup and completion for Python.
+;; https://github.com/pythonic-emacs/anaconda-mode
+;; https://melpa.org/#/anaconda-mode
 (use-package! anaconda-mode
-  :init
-  ;; (message "HERE anaconda-mode")
-  (add-hook 'python-mode-hook 'anaconda-mode)
-  (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+  :bind (:map python-mode-map ("C-:" . company-anaconda))
+  :hook
+  (python-mode . anaconda-mode)
+  (python-mode . anaconda-eldoc-mode)
+  ;; :init
+  ;; (add-hook 'python-mode-hook 'anaconda-mode)
+  ;; (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+)
 
 ;; IMPORTANT: check the benefits of lsp-jedi.
 ;; https://github.com/fredcamps/lsp-jedi
