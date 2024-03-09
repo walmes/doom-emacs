@@ -1077,6 +1077,8 @@
   (add-to-list 'hl-todo-keyword-faces '("COMMENT"     font-lock-keyword-face bold))
   (add-to-list 'hl-todo-keyword-faces '("TIP"         font-lock-keyword-face bold))
   (add-to-list 'hl-todo-keyword-faces '("TRICK"       font-lock-keyword-face bold))
+  (add-to-list 'hl-todo-keyword-faces '("INFO"        font-lock-keyword-face bold))
+  (add-to-list 'hl-todo-keyword-faces '("INFORMATION" font-lock-keyword-face bold))
   (add-to-list 'hl-todo-keyword-faces '("DANGER"      error bold))
   (add-to-list 'hl-todo-keyword-faces '("STOP"        error bold))
   (add-to-list 'hl-todo-keyword-faces '("FAIL"        error bold))
