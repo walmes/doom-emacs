@@ -706,22 +706,39 @@
   (ess-indent-or-complete))
 
 (defun wz-ess-one-argument-by-line-and-indent-region (start end)
-  "Break lines after commas, open parentheses, and closing parentheses in the selected region, excluding strings."
+  "Break lines after commas, open parentheses, and closing
+   parentheses in the selected region, excluding strings."
   (interactive "r")
   (save-excursion
     (goto-char start)
     (while (re-search-forward "[,()]" end t)
       (let ((in-string (nth 3 (syntax-ppss)))
-            (next-char (char-after (match-end 0))))
-        (unless (or in-string (eq next-char ?\n))
-          (replace-match (concat (match-string 0) "\n")))))
+            (before-operator
+             (or (eq (char-after (match-end 0)) ?\n)
+                 (save-excursion
+                   (goto-char (match-end 0))
+                   (looking-at " *[+*/%^),]")))
+             )
+            )
+        (unless (or in-string before-operator)
+          (replace-match (concat (match-string 0) "\n")))
+        ) ;; let
+      ) ;; while
     (indent-region start end)
-    )
+    ;; (ess-indent-or-complete)
+    ) ;; save-excursion
   )
 
-;;----------------------------------------------------------------------
-;; Improved version of occur. Quick navigation.
-;; http://ignaciopp.wordpress.com/2009/06/10/customizing-emacs-occur/
+(defun wz-ess-cancel-on-inferior-ess-buffer ()
+  "Switch to the inferior ESS buffer, interrupt any running job,
+   and switch back to the script buffer."
+  (interactive)
+  (ess-switch-to-inferior-or-script-buffer t)
+  (comint-interrupt-subjob)
+  (ess-switch-to-inferior-or-script-buffer t))
+
+(eval-after-load 'ess-mode
+  '(define-key ess-mode-map (kbd "C-<escape>") 'wz-ess-cancel-on-inferior-ess-buffer))
 
 (defun my-occur (&optional arg)
   "Make sure to always put occur in a vertical split, into a
@@ -824,6 +841,14 @@
     (flycheck-mode -1))
   (message "Modes flymake and flycheck disabled."))
 
+(defun wz-indent-and-move-to-next-line ()
+  "Indent the current line and move cursor to the first printable
+   character in the next line."
+  (interactive)
+  (indent-for-tab-command)
+  (next-line)
+  (skip-chars-forward " \t"))
+
 ;;----------------------------------------------------------------------
 ;; To solve problem with font-face.
 
@@ -851,19 +876,6 @@
 
 ;;----------------------------------------------------------------------
 
-(defun wz-cancel-on-inferior-ess-buffer ()
-  "Switch to the inferior ESS buffer, interrupt any running job,
-   and switch back to the script buffer."
-  (interactive)
-  (ess-switch-to-inferior-or-script-buffer t)
-  (comint-interrupt-subjob)
-  (ess-switch-to-inferior-or-script-buffer t))
-
-(eval-after-load 'ess-mode
-  '(define-key ess-mode-map (kbd "C-<escape>") 'wz-cancel-on-inferior-ess-buffer))
-
-;;----------------------------------------------------------------------
-
 (define-key global-map "\M-Q" 'unfill-region)
 (define-key global-map (kbd "C-S-o") 'my-occur)
 (define-key occur-mode-map (kbd "q") 'occur-mode-quit)
@@ -885,6 +897,7 @@
                 (lambda ()
                   (interactive)
                   (wz-insert-rule-from-point-to-margin ?/)))
+(global-set-key (kbd "<C-i>") 'wz-indent-and-move-to-next-line)
 
 (add-hook
  'markdown-mode-hook
@@ -913,8 +926,7 @@
    (local-set-key (kbd "C-:")     'wz-ess-find-and-insert-namespace)
    (local-set-key (kbd "<S-f9>")  'wz-ess-backward-R-assigment-symbol)
    (local-set-key (kbd "<S-f10>") 'wz-ess-forward-R-assigment-symbol)
-   (local-set-key (kbd "M-j")     'wz-ess-newline-indented)
-   (local-set-key (kbd "M-j")     'wz-ess-newline-indented)
+   (local-set-key (kbd "M-j")        'wz-ess-newline-indented)
    (local-set-key (kbd "<S-return>") 'wz-ess-newline-indented)
    (local-set-key (kbd "<backtab>")  'wz-ess-one-argument-by-line-and-indent-region)
    ;; (local-set-key (kbd "C-c C-h") 'ess-edit-indent-call-sophisticatedly)
