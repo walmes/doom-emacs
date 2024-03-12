@@ -153,6 +153,8 @@
 ;; (set-frame-parameter (selected-frame) 'alpha '(97 . 100))
 ;; (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
 
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+
 ;;----------------------------------------------------------------------
 ;; Key bindings.
 ;;----------------------------------------------------------------------
@@ -229,6 +231,9 @@
 ;; Byte compile file. Faster load and execution.
 ;; http://ergoemacs.org/emacs/emacs_byte_compile.html
 ;; (byte-recompile-directory "~/.emacs.d/elpa/bookmark+" 0 t)
+
+;; To avoid the error `(void-function org-link-set-parameters)'.
+(use-package! ol)
 
 (use-package! bookmark+
   :init

@@ -20,9 +20,28 @@ git clone git@github.com:walmes/doom-emacs.git ~/.doom.d/
 #-----------------------------------------------------------------------
 # Remove Emacs.
 
+# Check current version and components to be uninstalled.
+emacs -- version
+dpkg --get-selections | grep emacs | cut -f1
+
+# Uninstall them.
 sudo apt purge `dpkg --get-selections | grep emacs | cut -f1`
 
+# Install a specific version.
 sudo apt-get install emacs28
+
+# Adds PPA for the latest release.
+sudo add-apt-repository ppa:ubuntuhandbook1/emacs
+sudo apt update
+
+# Installs.
+# sudo apt cache search emacs
+sudo apt install emacs emacs-common
+
+# Check the installed version.
+emacs -- version
+
+# TODO: Install or update doom emacs.
 
 #-----------------------------------------------------------------------
 # Install some packages manually.
