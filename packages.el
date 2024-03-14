@@ -202,8 +202,8 @@
 ;; · https://codeium.com/emacs_tutorial
 ;; · https://github.com/Exafunction/codeium.el
 ;;
-;; (package! codeium
-;;   :recipe (:host github :repo "Exafunction/codeium.el"))
+(package! codeium
+  :recipe (:host github :repo "Exafunction/codeium.el"))
 
 ;; ChatGPT inside Emacs.
 ;; https://github.com/d1egoaz/c3po.el
