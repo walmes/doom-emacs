@@ -135,6 +135,8 @@
   :recipe (:host github
            :repo "rlister/org-present"))
 
+(package! perfect-margin)
+
 ;; Obsolete.
 ;; (package! smartparens)      ;; See `:config (default +smartparens)'.
 ;; (package! lsp-treemacs)     ;; Part of `:ui (treemacs +lsp)'.

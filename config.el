@@ -440,6 +440,23 @@
   )
 
 ;;----------------------------------------------------------------------
+;; Perfect Margin.
+;; https://github.com/mpwang/perfect-margin
+
+(use-package! perfect-margin
+  :config
+  (after! doom-modeline
+    (setq mode-line-right-align-edge 'right-fringe))
+  (after! minimap
+    ;; if you use (vc-gutter +pretty)
+    ;; and theme is causing "Invalid face attribute :foreground nil"
+    ;; (setq minimap-highlight-line nil)
+    (setq minimap-width-fraction 0.08))
+  ;; (setq perfect-margin-only-set-left-margin t)
+  ;; (perfect-margin-mode t)
+  )
+
+;;----------------------------------------------------------------------
 ;; Solve problem about text face related to tibble, rlang, messages and
 ;; warnings.
 ;; https://github.com/emacs-ess/ESS/issues/1193
