@@ -887,6 +887,8 @@
 (global-set-key (kbd "C-x t") 'open-shell-split-window)
 (global-set-key (kbd "M-;") 'comment-line-or-region)
 (global-set-key (kbd "C-ç") 'camel-dot-snake)
+(global-set-key (kbd "<C-i>") 'wz-indent-and-move-to-next-line)
+
 (global-set-key (kbd "C-c -") 'wz-insert-rule-from-point-to-margin)
 (global-set-key (kbd "C-M--") 'wz-insert-rule-and-comment-3)
 (global-set-key (kbd "C-c =")
@@ -897,7 +899,14 @@
                 (lambda ()
                   (interactive)
                   (wz-insert-rule-from-point-to-margin ?/)))
-(global-set-key (kbd "<C-i>") 'wz-indent-and-move-to-next-line)
+(global-set-key (kbd "C-c ,")
+                (lambda ()
+                  (interactive)
+                  (wz-insert-rule-from-point-to-margin ?¬)))
+(global-set-key (kbd "C-c .")
+                (lambda ()
+                  (interactive)
+                  (wz-insert-rule-from-point-to-margin ?─)))
 
 (add-hook
  'markdown-mode-hook
