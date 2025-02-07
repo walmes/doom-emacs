@@ -470,6 +470,23 @@
   :config
   (setq xterm-color-use-bold t))
 
+;; ;; https://stackoverflow.com/a/72132446
+;; (defun xterm-color-colorize-shell-command-output ()
+;;   "Colorize `shell-command' output."
+;;   (let ((bufs
+;;          (seq-remove
+;;           (lambda (x)
+;;             (not (or (string-prefix-p " *Echo Area" (buffer-name x))
+;;                      (string-prefix-p "*Shell Command" (buffer-name x)))))
+;;           (buffer-list))))
+;;     (dolist (buf bufs)
+;;       (with-current-buffer buf
+;;         (xterm-color-colorize-buffer)))))
+;; (defun xterm-color-colorize-shell-command-output-advice (proc &rest rest)
+;;   (xterm-color-colorize-shell-command-output))
+;; (advice-add 'shell-command :after #'xterm-color-colorize-shell-command-output-advice)
+;; ;; (advice-remove 'shell-command #'xterm-color-colorize-shell-command-output-advice)
+
 ;;----------------------------------------------------------------------
 ;; MarkDown configuration.
 
@@ -522,6 +539,25 @@
       (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step)
       (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)
       (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory))))
+
+;; (defun my-shell-mode-setup-imenu ()
+;;   (setq imenu-generic-expression (append '(("Variables" "^\\([A-Z_]+\\)=.*" 1))
+;;                                          (nthcdr 1 (car sh-imenu-generic-expression)))))
+;; (add-hook 'sh-mode-hook 'my-shell-mode-setup-imenu)
+
+;; (defun my-block-mode-setup-imenu ()
+;;   (setq imenu-generic-expression (append '(("Blocks" "^# \\(.*\\) ---+$" 1))
+;;                                         (nthcdr 1 (car sh-imenu-generic-expression)))))
+;; (add-hook 'sh-mode-hook 'my-block-mode-setup-imenu)
+
+(defun my-block-mode-setup-imenu ()
+  (setq imenu-generic-expression
+        (append '(("Blocks" "^# \\(.\\{1,15\\}\\)[^-]* ---+$" 1))
+                (nthcdr 1 (car sh-imenu-generic-expression))
+                )
+        )
+  )
+(add-hook 'sh-mode-hook 'my-block-mode-setup-imenu)
 
 ;;----------------------------------------------------------------------
 ;; hi-lock.el - Highlight patterns in buffer.
@@ -826,7 +862,7 @@
   ;;             )
   :config
   (setq python-indent-offset 4)
-  (setq python-shell-interpreter "/home/walmes/anaconda3/bin/python3")
+  ;; (setq python-shell-interpreter "/home/walmes/anaconda3/bin/python3") ;; ATTENTION: not use, cause conflict with jedi.
   ;; (define-key python-mode-map [S-f5] 'company-complete)
   ;; (define-key python-mode-map [S-f6] 'complete-symbol)
   ;; ATTENTION: Third party software installed apart.
