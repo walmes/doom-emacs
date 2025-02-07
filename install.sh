@@ -44,6 +44,9 @@ emacs --version
 # TODO: Install or update doom emacs.
 
 #-----------------------------------------------------------------------
+# Rscript -e 'install.packages(c("languageserver", "formatR"))'
+
+#-----------------------------------------------------------------------
 # Install some packages manually.
 
 # (progn
