@@ -158,6 +158,13 @@
 ;; https://github.com/ShuguangSun/ess-view-data
 (package! ess-view-data)
 
+;; https://github.com/stan-dev/stan-mode?tab=readme-ov-file#configuration
+(package! stan-mode)
+(package! company-stan)
+(package! eldoc-stan)
+(package! flycheck-stan)
+(package! stan-snippets)
+
 ;; Ease to read reports.
 ;; https://codeberg.org/joostkremers/visual-fill-column
 (package! visual-fill-column)
