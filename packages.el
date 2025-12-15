@@ -195,7 +195,7 @@
 ;; `ChatGPT', `Gemini' and many others.
 ;; https://github.com/karthink/gptel
 ;;
-;; (package! gptel)
+(package! gptel :recipe (:nonrecursive t))
 
 ;; This Emacs Code extension allows you to use the official OpenAI API
 ;; to generate code or natural language responses from OpenAI's ChatGPT

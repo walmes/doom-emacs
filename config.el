@@ -676,10 +676,8 @@
           comint-scroll-to-bottom-on-output t
           comint-move-point-for-output t
           ess-indent-offset 4)
-    ;; (setq lsp-diagnostics-provider :none)
-    (setq ;; ess-r-backend 'lsp
-          ;; ess-style 'RStudio
-          ess-use-flymake nil)
+    ;; Garante que o Flymake do ESS está desligado para usarmos o Flycheck.
+    (setq ess-use-flymake nil)
     )
   :bind
   (("C-S-<f5>" . ess-eval-chunk)
@@ -725,7 +723,6 @@
       (require 'ess-site)
       (require 'ess-view-data)
       ;; (setq ess-view-data-mode t)
-      (flycheck-mode -1)        ;; Disable flycheck/lintr.
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
       ;; (ess-toggle-underscore nil)
@@ -753,6 +750,7 @@
       (define-key ess-mode-map [?\M--] 'ess-cycle-assign)
       (define-key ess-mode-map [S-f5] 'company-R-args)    ;; S-F5 do show ARGS.
       (define-key ess-mode-map [C-f5] 'company-R-objects) ;; C-F5 complete objects.
+      (flycheck-mode 1)        ;; Enable/disable flycheck/lintr.
       )
    )
   ;; SOLVED: https://github.com/syl20bnr/spacemacs/issues/5395#issuecomment-297027630
@@ -761,6 +759,7 @@
    '(lambda ()
       (setq-local comint-use-prompt-regexp nil)
       (setq-local inhibit-field-text-motion nil)
+      (flycheck-mode -1)        ;; Disable flycheck/lintr.
       )
    )
   ;;-----------------------------------------
@@ -830,51 +829,51 @@
 ;;----------------------------------------------------------------------
 ;; Stan.
 
-;;; stan-mode.el
-(use-package! stan-mode
-  :mode ("\\.stan\\'" . stan-mode)
-  :hook (stan-mode . stan-mode-setup)
-  ;;
-  :config
-  ;; The officially recommended offset is 2.
-  (setq stan-indentation-offset 2))
+;; ;;; stan-mode.el
+;; (use-package! stan-mode
+;;   :mode ("\\.stan\\'" . stan-mode)
+;;   :hook (stan-mode . stan-mode-setup)
+;;   ;;
+;;   :config
+;;   ;; The officially recommended offset is 2.
+;;   (setq stan-indentation-offset 2))
 
-;;; company-stan.el
-(use-package! company-stan
-  :hook (stan-mode . company-stan-setup)
-  ;;
-  :config
-  ;; Whether to use fuzzy matching in `company-stan'
-  (setq company-stan-fuzzy nil))
+;; ;;; company-stan.el
+;; (use-package! company-stan
+;;   :hook (stan-mode . company-stan-setup)
+;;   ;;
+;;   :config
+;;   ;; Whether to use fuzzy matching in `company-stan'
+;;   (setq company-stan-fuzzy nil))
 
-;;; eldoc-stan.el
-(use-package! eldoc-stan
-  :hook (stan-mode . eldoc-stan-setup)
-  ;;
-  :config
-  ;; No configuration options as of now.
-  )
+;; ;;; eldoc-stan.el
+;; (use-package! eldoc-stan
+;;   :hook (stan-mode . eldoc-stan-setup)
+;;   ;;
+;;   :config
+;;   ;; No configuration options as of now.
+;;   )
 
-;;; flycheck-stan.el
-(use-package! flycheck-stan
-  ;; Add a hook to setup `flycheck-stan' upon `stan-mode' entry
-  :hook ((stan-mode . flycheck-stan-stanc2-setup)
-         (stan-mode . flycheck-stan-stanc3-setup))
-  :config
-  ;; A string containing the name or the path of the stanc2 executable
-  ;; If nil, defaults to `stanc2'
-  (setq flycheck-stanc-executable nil)
-  ;; A string containing the name or the path of the stanc2 executable
-  ;; If nil, defaults to `stanc3'
-  (setq flycheck-stanc3-executable nil))
+;; ;;; flycheck-stan.el
+;; (use-package! flycheck-stan
+;;   ;; Add a hook to setup `flycheck-stan' upon `stan-mode' entry
+;;   :hook ((stan-mode . flycheck-stan-stanc2-setup)
+;;          (stan-mode . flycheck-stan-stanc3-setup))
+;;   :config
+;;   ;; A string containing the name or the path of the stanc2 executable
+;;   ;; If nil, defaults to `stanc2'
+;;   (setq flycheck-stanc-executable nil)
+;;   ;; A string containing the name or the path of the stanc2 executable
+;;   ;; If nil, defaults to `stanc3'
+;;   (setq flycheck-stanc3-executable nil))
 
-;;; stan-snippets.el
-(use-package! stan-snippets
-  :hook (stan-mode . stan-snippets-initialize)
-  ;;
-  :config
-  ;; No configuration options as of now.
-  )
+;; ;;; stan-snippets.el
+;; (use-package! stan-snippets
+;;   :hook (stan-mode . stan-snippets-initialize)
+;;   ;;
+;;   :config
+;;   ;; No configuration options as of now.
+;;   )
 
 ;; ;;; ac-stan.el (Not on MELPA; Need manual installation)
 ;; (use-package! ac-stan
@@ -981,11 +980,9 @@
 ;; details. https://melpa.org/#/conda.
 (use-package! conda
   :init
-  ;; (message "HERE conda init")
   (setq conda-anaconda-home (expand-file-name "~/anaconda3"))
   (setq conda-env-home-directory (expand-file-name "~/anaconda3"))
   :config
-  ;; (message "HERE conda config")
   (conda-env-initialize-interactive-shells)
   (conda-env-initialize-eshell)
   ;; (conda-env-activate 'getenv "CONDA_DEFAULT_ENV")
@@ -1017,6 +1014,20 @@
 ;;     (message "HERE lsp-jedi")
 ;;     (add-to-list 'lsp-disabled-clients 'pyls)
 ;;     (add-to-list 'lsp-enabled-clients 'jedi)))
+
+;;----------------------------------------------------------------------
+;; GPTel - Emacs client for OpenAI's GPT-3 API.
+
+;; To declare the environment variable in `custom.el` file.
+;; (custom-set-variables
+;;   '(process-environment (quote ("OPENAI_API_KEY_GPTEL=sk-..."))))
+;;
+;; Or put in `~/.bashrc` file: `$ export OPENAI_API_KEY_GPTEL=sk-...`
+
+(use-package! gptel
+  :config
+  ;; Lê a variável de ambiente OPENAI_API_KEY_GPTEL no Ubuntu.
+  (setq! gptel-api-key (getenv "OPENAI_API_KEY_GPTEL")))
 
 ;;----------------------------------------------------------------------
 ;; Github Copilot.

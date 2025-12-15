@@ -8,6 +8,7 @@ mv -v ~/.emacs.d ~/OLD.emacs.d/
 # Install Doom-Emacs.
 # git clone --depth 1 https://github.com/hlissner/doom-emacs ~/.emacs.d
 git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.emacs.d
+git clone --revision=a4d00445d26ae54cbfb017af74c4dc5735453a6f --depth 1 https://github.com/doomemacs/doomemacs ~/.emacs.d
 ~/.emacs.d/bin/doom install
 
 # Brings my persional configuration.
