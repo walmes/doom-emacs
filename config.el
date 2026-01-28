@@ -174,10 +174,14 @@
 (global-set-key [?\M-+] (kbd "M-h C-M-\\"))
 
 ;; "C-~" to keep one white space between objects around point.
-(global-set-key (kbd "<C-dead-tilde>") 'fixup-whitespace)
+;; (global-set-key (kbd "<C-dead-tilde>") 'fixup-whitespace)
+(global-set-key (kbd "C-~") 'fixup-whitespace)
+(global-set-key (kbd "M-<delete>") 'fixup-whitespace)
 
 ;; "M-~" to joint lines.
-(global-set-key (kbd "<M-dead-tilde>") 'delete-indentation)
+;; (global-set-key (kbd "<M-dead-tilde>") 'delete-indentation)
+(global-set-key (kbd "M-~") 'delete-indentation)
+(global-set-key (kbd "S-<backspace>") 'delete-indentation)
 
 ;; S-F11 and S-F12 to show/hide menu bar and tool bar.
 (global-set-key (kbd "<S-f11>") 'toggle-menu-bar-mode-from-frame)
