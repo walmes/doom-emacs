@@ -131,7 +131,13 @@
     nil)
   (if char
       (insert (make-string (- fill-column (current-column)) char))
-    (insert (make-string (- fill-column (current-column)) ?-))))
+    (insert (make-string (- fill-column (current-column)) ?-)))
+  (beginning-of-line)
+  ;; Move the point to the fill-column position.
+  (forward-char fill-column)
+  ;; Delete what exceeds the fill-column.
+  (delete-region (point) (line-end-position))
+  )
 
 (defun wz-insert-rule-and-comment-3 ()
   "Insert a commented rule with 43 dashes (-). Useful to divide
@@ -192,6 +198,14 @@
 ;;----------------------------------------------------------------------
 ;; Header.
 
+(defun wz-left-align-commented-text (text)
+    "Escreve o texto alinhado à esquerda e comenta a linha."
+    ;; (interactive)
+    (insert (concat "\n" text))
+    (comment-line-or-region))
+
+;; (wz-left-align-commented-text "Sample left aligned text.")
+
 (defun wz-right-align-commented-text (text comment-char-size)
   "Write text aligned to the right margin at `fill-column' and
    comment it out."
@@ -200,7 +214,8 @@
     (insert (concat "\n" text))
     (comment-line-or-region)
     (backward-char string-length)
-    (insert (make-string (- number-of-spaces comment-char-size) ? ))
+    ;; (insert (make-string (- number-of-spaces comment-char-size) ? ))
+    (insert (make-string (- number-of-spaces 2) ? ))
     (forward-char string-length)))
 
 (defun wz-header ()
@@ -232,6 +247,95 @@
     )
   (insert "\n")
   (wz-insert-rule-from-point-to-margin))
+
+;; Variáveis para o cabeçalho do projeto.
+(defvar-local wz-project-title nil
+    "Título do projeto para o cabeçalho.")
+(defvar-local wz-project-subtitle nil
+    "Subtítulo do projeto para o cabeçalho.")
+(defvar-local wz-project-author-name "Prof. Dr. Walmes M. Zeviani"
+    "Nome do autor.")
+(defvar-local wz-project-author-affiliation nil
+    "Afiliação ou local de trabalho.")
+(defvar-local wz-project-author-email nil
+    "E-mail ou redes sociais.")
+(defvar-local wz-project-author-website nil
+    "Endereço do site ou repositório.")
+(defvar-local wz-project-author-address nil
+    "Endereço geográfico.")
+(defvar-local wz-project-date nil
+    "Data do projeto.")
+
+;; Definir as variáveis locais no arquivo `.dir-locals.el' seguindo esse
+;; esquema.
+;;
+;; ((nil . ((wz-project-title              . "Aplicações e Dashboards Avançado com R")
+;;          (wz-project-subtitle           . "Usando Shiny & bslib")
+;;          (wz-project-author-affiliation . "Universidade Federal da Grande Dourados")
+;;          (wz-project-author-email       . "walmeszeviani@ufgd.edu.br")
+;;          (wz-project-author-website     . "github.com/walmes · walmeszeviani.com")
+;;          ;; (wz-project-author-address     . "Dourados, MS, Brasil")
+;;          (wz-project-date               . "%Y-%b-%d · Dourados, MS, Brasil"))))
+
+;; Função para cabeçalho de projeto usando variáveis locais.
+(defun wz-header-project ()
+    "Insere o cabeçalho do projeto usando variáveis locais."
+    (interactive)
+    (let* ((char ?/)
+           (comment-char-str (char-to-string char)))
+      ;; Insere a regra inicial com o caractere /.
+      (wz-insert-rule-from-point-to-margin char)
+
+      ;; Calcula o tamanho do prefixo de comentário no buffer atual.
+      ;; Isso é necessário para a função de alinhamento à direita.
+      (let ((comment-char-size
+             (- (+ fill-column 2)
+                (how-many comment-char-str
+                          (line-beginning-position)
+                          (point)
+                          t))))
+
+        ;; Título e Subtítulo (Alinhados à Esquerda).
+        (when wz-project-title
+          (wz-left-align-commented-text wz-project-title))
+        (when wz-project-subtitle
+          (wz-left-align-commented-text wz-project-subtitle))
+        (wz-left-align-commented-text ".")
+        ;; dar backspace em um caracter.
+        (delete-char -2)
+
+        ;; Informações do Autor (Alinhadas à Direita).
+        (when wz-project-author-name
+          (wz-right-align-commented-text
+           wz-project-author-name
+           comment-char-size))
+        (when wz-project-author-affiliation
+          (wz-right-align-commented-text
+           wz-project-author-affiliation
+           comment-char-size))
+        (when wz-project-author-email
+          (wz-right-align-commented-text
+           wz-project-author-email
+           comment-char-size))
+        (when wz-project-author-website
+          (wz-right-align-commented-text
+           wz-project-author-website
+           comment-char-size))
+        (when wz-project-author-address
+          (wz-right-align-commented-text
+           wz-project-author-address
+           comment-char-size))
+        (when wz-project-date
+          (let ((final-date (if (string-match-p "%" wz-project-date)
+                                (format-time-string wz-project-date)
+                              wz-project-date)))
+            (wz-right-align-commented-text
+             final-date comment-char-size)))
+        )
+
+      ;; Fecha com a regra final.
+      (insert "\n")
+      (wz-insert-rule-from-point-to-margin char)))
 
 ;;----------------------------------------------------------------------
 ;; Code based on
