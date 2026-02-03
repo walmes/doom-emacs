@@ -1,314 +1,206 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
 ;;======================================================================
-;; Configuration file to Doom Emacs (>=26.3) by Walmes Zeviani.
+;; Doom Emacs Configuration by Walmes Zeviani
 ;;
 ;; This file is hosted at https://github.com/walmes/doom-emacs.
 ;;
-;; Almost all the content available here was obtained/inspired by
-;; queries on the internet. Please, send questions, problems and/or
-;; suggestions as an issue on GitHub project of this file.
+;; Organized for readability, performance, and maintainability.
+;; content extracted and refactored from the original `config.el`.
 ;;======================================================================
 
-;; Some configurations to get inspired.
-;; https://zzamboni.org/post/my-doom-emacs-configuration-with-commentary/
-;; https://dotdoom.rgoswami.me/config.html
-;; https://emacs.zdx.cat/
-
 ;;----------------------------------------------------------------------
-;; http://www.emacswiki.org/wiki/EmacsNiftyTricks
-;; “I’ve used Emacs for many years now, but have never reached its
-;;    maximum potential.” -- Anon.
-;;
-;; http://www.mygooglest.com/fni/dot-emacs.html
-;; “Show me your ~/.emacs and I will tell
-;;    you who you are.” -- Bogdan Maryniuk.
-;;
-;; https://www.emacswiki.org/emacs/EmacsKoans
-;; “-- Master, does Emacs have buddha-nature?
-;;  -- I can't se why not, it has everything else.”
-
+;; 1. User Identity
 ;;----------------------------------------------------------------------
-;; Place your private configuration here! Remember, you do not need to
-;; run 'doom sync' after modifying this file!
 
-;; Some functionality uses this to identify you, e.g. GPG configuration,
-;; email clients, file templates and snippets.
 (setq user-full-name "Walmes Zeviani"
       user-mail-address "walmeszeviani")
 
-;; Doom exposes five (optional) variables for controlling fonts in Doom.
-;; Here are the three important ones:
-;;
-;; + `doom-font'
-;; + `doom-variable-pitch-font'
-;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
-;;   presentations or streaming.
-;;
-;; They all accept either a font-spec, font string ("Input Mono-12"), or
-;; xlfd font string. You generally only need these two:
-;; (setq ;; doom-font (font-spec :family "Spline Sans Mono" :weight 'light)
-;;       doom-font (font-spec :family "Fira Mono" :weight 'light)
-;;       ;; doom-big-font (font-spec :family "Fira Mono" :weight 'normal :size 21)
-;;       doom-big-font (font-spec :size 21)
-;;       ;; doom-variable-pitch-font (font-spec :family "Montserrat" :size 13)
-;;       )
+;;----------------------------------------------------------------------
+;; 2. Visual Settings (Fonts & Themes)
+;;----------------------------------------------------------------------
 
-;; NOTE: to list all fonts available in your system, run on terminal.
-;;   fc-list | grep FiraCode
-;; (:family "Fira Code" :foundry "CTDB" :slant normal :weight normal :height 128 :width normal)
-;; (:family "JetBrains Mono" :foundry "JB" :slant normal :weight extra-light :height 128 :width normal)
+;; Fonts
+;; doom-font: Primary font used for code.
+;; doom-variable-pitch-font: Font for non-monospaced text (like Org headings).
+;; doom-big-font: Used when `doom-big-font-mode` is enabled (for presentations).
+;; (setq doom-font (font-spec :family "Fira Mono" :weight 'light)
+;;       doom-big-font (font-spec :size 21))
 
-;; (defvar doom-big-font-increment 3)
-
-;; There are two ways to load a theme. Both assume the theme is
-;; installed and available. You can either set `doom-theme' or manually
-;; load a theme with the `load-theme' function. This is the default:
+;; Theme
+;; There are two ways to load a theme. Both assume the theme is installed and
+;; available. You can either set `doom-theme' or manually load a theme with the
+;; `load-theme' function.
 (setq doom-theme 'doom-one)
+;; Alternative themes commented out:
 ;; (setq doom-theme 'doom-bluloco-dark)
 ;; (setq doom-theme 'doom-horizon)
 ;; (setq doom-theme 'doom-city-lights)
 ;; (setq doom-theme 'doom-tokyo-night)
 ;; (setq doom-theme 'doom-ayu-dark)
 
-;; (use-package! spacemacs-theme
-;;   :init (load-theme 'spacemacs-dark t))
-
-;; If you use `org' and don't want your org files in the default
-;; location below, change `org-directory'. It must be set before org
-;; loads!
-(setq org-directory "~/org/")
-
+;; Line Numbers
 ;; This determines the style of line numbers in effect. If set to `nil',
 ;; line numbers are disabled. For relative line numbers, set this to
 ;; `relative'.
 (setq display-line-numbers-type nil)
 
-;; Here are some additional functions/macros that could help you
-;; configure Doom:
-;;
-;; - `load!' for loading external *.el files relative to this one
-;; - `use-package!' for configuring packages
-;; - `after!' for running code after a package has loaded
-;; - `add-load-path!' for adding directories to the `load-path',
-;;   relative to this file. Emacs searches the `load-path' when you load
-;;   packages with `require' or `use-package'.
-;; - `map!' for binding new keys
-;;
-;; To get information about any of these functions/macros, move the
-;; cursor over the highlighted symbol at press 'K' (non-evil users must
-;; press 'C-c c k'). This will open documentation for it, including
-;; demos of how they are used.
-;;
-;; You can also try 'gd' (or 'C-c c d') to jump to their definition and
-;; see how they are implemented.
-
-;;----------------------------------------------------------------------
-;; Basic definitions.
-;;----------------------------------------------------------------------
-
-(global-hl-line-mode 1)             ;; Highlight the cursor line.
-(visual-line-mode 1)                ;; Screen lines, not logical lines.
-(show-paren-mode 1)                 ;; Highlight matching pairs.
-(delete-selection-mode 1)           ;; Allows delete region.
-(recentf-mode 1)                    ;; List of recently opened files.
-(global-auto-revert-mode 1)         ;; Refresh buffer if file changes.
-
-;; (global-flycheck-mode -1)           ;; Turn off Flycheck.
-
-(setq column-number-mode t)         ;; Show cursor position.
-(setq auto-save-default nil)        ;; Turn off #autosave#.
-(setq make-backup-files nil)        ;; Turn off backup~.
-(setq comment-empty-lines t)        ;; Comment even in empty lines.
-(setq select-enable-clipboard t)    ;; Allow shared transfer area.
-(setq tab-always-indent t)
-(setq-default indent-tabs-mode nil) ;; Spaces to indent.
-(setq-default fill-column 72)       ;; Column width.
-
-;; Highlight whitespace.
-(global-whitespace-mode t)
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-(setq whitespace-line-column fill-column)
-(setq whitespace-style '(face lines-tail trailing tabs empty))
-
-;; (setq doom-variable-pitch-font
-;;       (font-spec :family "Noto Sans" :size 12))
-(setq doom-themes-treemacs-enable-variable-pitch nil)
-
-;; When scrolling with the cursor, show 4 lines above/below.
-(setq scroll-margin 5)
-
-(dolist
-    (mode '(messages-buffer-mode-hook
-            comint-mode-hook
-            term-mode-hook
-            erc-mode-hook
-            inferior-ess-mode-hook
-            eshell-mode-hook
-            inferior-python-mode-hook))
-  (set (make-local-variable 'scroll-margin) 0)
-  )
-
-;; Let the desktop background show through.
-;; (set-frame-parameter (selected-frame) 'alpha '(97 . 100))
+;; Transparency (optional)
 ;; (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
 
+;; Maximize frame on startup
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
-;;----------------------------------------------------------------------
-;; Key bindings.
-;;----------------------------------------------------------------------
-
-;; C-z to 'undo, the default is C-/.
-(global-unset-key "\C-z")
-(global-set-key "\C-z" 'undo)
-
-;; Uses C-/ to complete paths.
-(global-unset-key (kbd "C-/"))
-(global-set-key (kbd "C-/") 'company-files)
-
-;; M-. to (un)comment paragraph.
-(global-set-key [?\M-.] (kbd "M-h M-; M-}"))
-
-;; M-+ to indent paragraph.
-(global-set-key [?\M-+] (kbd "M-h C-M-\\"))
-
-;; "C-~" to keep one white space between objects around point.
-;; (global-set-key (kbd "<C-dead-tilde>") 'fixup-whitespace)
-(global-set-key (kbd "C-~") 'fixup-whitespace)
-(global-set-key (kbd "M-<delete>") 'fixup-whitespace)
-
-;; "M-~" to joint lines.
-;; (global-set-key (kbd "<M-dead-tilde>") 'delete-indentation)
-(global-set-key (kbd "M-~") 'delete-indentation)
-(global-set-key (kbd "S-<backspace>") 'delete-indentation)
-
-;; S-F11 and S-F12 to show/hide menu bar and tool bar.
-(global-set-key (kbd "<S-f11>") 'toggle-menu-bar-mode-from-frame)
-(global-set-key (kbd "<S-f12>") 'toggle-tool-bar-mode-from-frame)
-
-;; (global-auto-revert-mode 1)
-(global-set-key [f5] 'revert-buffer)
-
-;; ;; Navigation in balanced expressions.
-;; (dolist (mode '(ess-mode-hook lisp-mode-hook))
-;;   (add-hook mode
-;;             '(lambda ()
-;;                (global-set-key (kbd "<M-right>")  'forward-sexp)
-;;                (global-set-key (kbd "<M-left>")   'bakward-sexp)
-;;                (global-set-key (kbd "<M-down>")   'forward-list)
-;;                (global-set-key (kbd "<M-up>")     'backward-list)
-;;                (global-set-key (kbd "<M-S-up>")   'backward-up-list)
-;;                (global-set-key (kbd "<M-S-down>") 'down-list))))
+;; Margin settings
+(setq scroll-margin 5)
+(dolist (mode '(messages-buffer-mode-hook
+                comint-mode-hook
+                term-mode-hook
+                erc-mode-hook
+                inferior-ess-mode-hook
+                eshell-mode-hook
+                inferior-python-mode-hook))
+  (add-hook mode (lambda () (set (make-local-variable 'scroll-margin) 0))))
 
 ;;----------------------------------------------------------------------
-;; My functions.
+;; 3. Core Editor Configuration
 ;;----------------------------------------------------------------------
 
-;; Add directory with supplementary configuration files.
-;; (add-to-list 'load-path "~/.doom.d/")
-(add-load-path! "~/.doom.d/")
+(setq org-directory "~/org/")
 
-;; Byte compile file.
-;; (byte-compile-file "~/.doom.d/funcs.el")
+;; Basic Modes
+(global-hl-line-mode 1)         ; Highlight the cursor line.
+(visual-line-mode 1)            ; Screen lines, not logical lines.
+(show-paren-mode 1)             ; Highlight matching pairs.
+(delete-selection-mode 1)       ; Replace selection when typing.
+(recentf-mode 1)                ; Keep track of recently opened files.
+(global-auto-revert-mode 1)     ; Refresh buffer if file changes.
 
-;; Load my functions.
-(require 'funcs)
+;; General Settings
+(setq column-number-mode t      ; Show cursor column position.
+      auto-save-default nil     ; Turn off #autosave# files.
+      make-backup-files nil     ; Turn off backup~ files.
+      comment-empty-lines t     ; Apply comments to empty lines.
+      select-enable-clipboard t ; Integrate with system clipboard.
+      tab-always-indent t)
+(setq-default indent-tabs-mode nil
+              fill-column 72)
+
+;; Whitespace handling
+(global-whitespace-mode t)
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+(setq whitespace-line-column fill-column
+      whitespace-style '(face lines-tail trailing tabs empty))
 
 ;;----------------------------------------------------------------------
-;; Configures `company'.
+;; 4. Global Keybindings
+;;----------------------------------------------------------------------
+;; Using Doom's `map!` macro for cleaner key definitions.
+;; See `M-x doom/help-modules` -> `config/default` or
+;; `C-h f map!` for docs.
 
+(map!
+ ;; Undo/Files
+ "C-z"       #'undo
+ "C-/"       #'company-files
+
+ ;; Screenshot
+ "M-x screenshot" #'screenshot
+
+ ;; Functions previously bound to global keys
+ "C-~"           #'fixup-whitespace
+ "M-<delete>"    #'fixup-whitespace
+ "M-~"           #'delete-indentation
+ "S-<backspace>" #'delete-indentation
+
+ ;; Paragraph manipulation
+ "M-." (cmd! (progn
+               (backward-paragraph)
+               (mark-paragraph)
+               (comment-dwim nil)))
+ "M-+" (cmd! (progn
+               (backward-paragraph)
+               (mark-paragraph)
+               (indent-region (region-beginning) (region-end))))
+
+ ;; Frame toggles
+ "<S-f11>" #'toggle-menu-bar-mode-from-frame
+ "<S-f12>" #'toggle-tool-bar-mode-from-frame
+ "<f5>"    #'revert-buffer
+
+ ;; Bookmark+
+ ;; Note: Ensure `bookmark+` is installed.
+ "<C-f3>"  #'bmkp-toggle-autonamed-bookmark-set/delete
+ "<f3>"    #'bmkp-next-bookmark-this-file/buffer-repeat
+ "<f4>"    #'bmkp-previous-bookmark-this-file/buffer-repeat
+ "<S-f3>"  #'bmkp-toggle-temporary-bookmark
+
+ ;; Visible Bookmarks (bm)
+ "<C-f2>"  #'bm-toggle
+ "<f2>"    #'bm-next
+ "<S-f2>"  #'bm-previous
+
+ ;; Imenu-list
+ "<f12>"   #'imenu-list-smart-toggle
+
+ ;; YaFolding
+ "C-{"     #'yafolding-hide-parent-element
+ "C-}"     #'yafolding-toggle-element
+
+ ;; LSP Treemacs
+ "C-<f8>"  #'lsp-treemacs-symbols-toggle
+ "<f8>"    #'lsp-ui-imenu-toggle)
+
+;; Logic for commenting paragraph was custom: "M-h M-; M-}"
+;; Logic for indenting paragraph was custom: "M-h C-M-\"
+
+;;----------------------------------------------------------------------
+;; 5. Modules & Packages
+;;----------------------------------------------------------------------
+
+;;--- Loading External Files -------------------------------------------
+;; Recommended: Add `funcs.el` to the same directory as config.el
+(add-load-path! ".")
+(require 'funcs nil t) ; Load if exists, don't error if not
+
+;;--- Company (Completion) ---------------------------------------------
 (use-package! company
   :bind
   ("C-*" . company-complete))
 
-;;----------------------------------------------------------------------
-;; Magit.
-
+;;--- Magit (Git) ------------------------------------------------------
 (use-package! magit
   :bind
   ("C-c g" . magit-status))
 
-;;----------------------------------------------------------------------
-;; Bookmark-plus.
-
-;; Byte compile file. Faster load and execution.
-;; http://ergoemacs.org/emacs/emacs_byte_compile.html
-;; (byte-recompile-directory "~/.emacs.d/elpa/bookmark+" 0 t)
-
-;; To avoid the error `(void-function org-link-set-parameters)'.
-(use-package! ol)
-
+;;--- Bookmarks (Bookmark+) --------------------------------------------
+;; Use `package!` in packages.el to install bookmark+
 (use-package! bookmark+
   :init
   (when (file-exists-p "~/Dropbox/bookmarks")
     (setq bookmark-default-file "~/Dropbox/bookmarks"
-          bookmark-save-flag 1))
-  :config
-  ;; ATTENTION: for some unknown reason, the keymap must be defined in
-  ;; `:config' because in `:bind' the bookmark list buffer have a
-  ;; different appearance.
-  (progn
-    ;; Create an autonamed bookmark.
-    (global-set-key (kbd "<C-f3>")
-                    'bmkp-toggle-autonamed-bookmark-set/delete)
-    ;; Go to the next bookmark in file.
-    (global-set-key (kbd "<f3>")
-                    'bmkp-next-bookmark-this-file/buffer-repeat)
-    ;; Go to the previous bookmark in file.
-    (global-set-key (kbd "<f4>")
-                    'bmkp-previous-bookmark-this-file/buffer-repeat)
-    ;; Toggle temporary/permanent bookmark.
-    (global-set-key (kbd "<S-f3>")
-                    'bmkp-toggle-temporary-bookmark)
-    ))
+          bookmark-save-flag 1)))
 
-;;----------------------------------------------------------------------
-;; Visible bookmarks. Easy movement.
-;; https://marmalade-repo.org/packages/bm
-
+;;--- Visible Bookmarks (bm) -------------------------------------------
 (use-package! bm
   :config
   (setq bm-marker 'bm-marker-left
-        bm-highlight-style 'bm-highlight-only-fringe)
-  :bind
-  (("<C-f2>" . bm-toggle)
-   ("<f2>"   . bm-next)
-   ("<S-f2>" . bm-previous)))
+        bm-highlight-style 'bm-highlight-only-fringe))
 
-;;----------------------------------------------------------------------
-;; Folding code blocks based on indentation.
-;; git clone https://github.com/zenozeng/yafolding.el.git
+;;--- Folding (YaFolding) ----------------------------------------------
+(use-package! yafolding)
 
-(use-package! yafolding
-  :bind
-  (("C-{" . yafolding-hide-parent-element)
-   ("C-}" . yafolding-toggle-element)))
-
-;;----------------------------------------------------------------------
-;; Snippets.
-;; https://joaotavora.github.io/yasnippet/snippet-development.html
-;; http://pragmaticemacs.com/emacs/smart-text-templates-with-yasnippet/
-
+;;--- Snippets (Yasnippet) ---------------------------------------------
 (use-package! yasnippet
   :config
   (yas-global-mode 1))
 
-;;----------------------------------------------------------------------
-;; Web-mode.
-
+;;--- Web Mode ---------------------------------------------------------
 (use-package! web-mode
   :config
-  (progn
-    (add-hook 'web-mode-hook
-              '(lambda ()
-                 (setq web-mode-markup-indent-offset 4)
-                 ))
-    ))
+  (setq web-mode-markup-indent-offset 4))
 
-;;----------------------------------------------------------------------
-;; Treemacs and icons.
-
+;;--- Treemacs ---------------------------------------------------------
 (use-package! treemacs
   :config
   (setq treemacs-is-never-other-window nil))
@@ -318,30 +210,11 @@
   (treemacs-load-theme "nerd-icons"))
 
 (use-package! nerd-icons-dired
-  :hook
-  (dired-mode . nerd-icons-dired-mode))
+  :hook (dired-mode . nerd-icons-dired-mode))
 
-;;----------------------------------------------------------------------
-;; Neotree.
-
-;; (after! doom-themes
-;;   (remove-hook 'doom-load-theme-hook #'doom-themes-neotree-config))
-;;
-;; (use-package! neotree
-;;   :config
-;;   (setq neo-theme 'icons)
-;;   ;; (setq doom-neotree-file-icons t)
-;;   ;; (setq doom-themes-neotree-file-icons t)
-;;   ;; (setq doom-neotree-enable-variable-pitch nil)
-;;   )
-
-;;----------------------------------------------------------------------
-;; Dired sidebar.
-;; https://github.com/jojojames/dired-sidebar
-
+;;--- Dired Sidebar ----------------------------------------------------
 (use-package! dired-sidebar
-  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
-  ;; :ensure t
+  :bind ("C-x C-n" . dired-sidebar-toggle-sidebar)
   :commands (dired-sidebar-toggle-sidebar)
   :init
   (add-hook 'dired-sidebar-mode-hook
@@ -351,269 +224,105 @@
   :config
   (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
   (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
-  (setq dired-sidebar-subtree-line-prefix "__")
-  (setq dired-sidebar-theme 'ascii)
-  ;; (setq dired-sidebar-theme 'nerd)
-  ;; (setq dired-sidebar-theme 'icons)
-  ;; (setq dired-sidebar-theme 'none)
-  ;; (setq dired-sidebar-theme 'vscode)
-  (setq dired-sidebar-use-term-integration t)
-  (setq dired-sidebar-use-custom-font nil)
-)
+  (setq dired-sidebar-subtree-line-prefix "__"
+        dired-sidebar-theme 'ascii
+        dired-sidebar-use-term-integration t
+        dired-sidebar-use-custom-font nil))
 
-;;----------------------------------------------------------------------
-;; imenu-list
-
+;;--- Imenu List -------------------------------------------------------
 (use-package! imenu-list
   :config
-  (setq imenu-list-focus-after-activation t)
-  (setq imenu-list-auto-resize t)
-  (setq imenu-list-size 0.2)
-  (setq imenu-list-position 'left)
-  :bind
-  ("<f12>" . imenu-list-smart-toggle)
-)
+  (setq imenu-list-focus-after-activation t
+        imenu-list-auto-resize t
+        imenu-list-size 0.2
+        imenu-list-position 'left))
 
-;;----------------------------------------------------------------------
-;; Uses `M-x screeshot' to take a screenshot of a region or buffer.
-;; https://www.emacswiki.org/emacs/ScreenShot
-;; https://github.com/tecosaur/screenshot
-
+;;--- Screenshot -------------------------------------------------------
 (use-package! screenshot
   :config
-  (setq screenshot-schemes
-        '(("current-directory" :dir default-directory)))
-  (setq screenshot-default-scheme "current-directory"))
+  (setq screenshot-schemes '(("current-directory"
+                              :dir default-directory))
+        screenshot-default-scheme "current-directory"))
 
-;;----------------------------------------------------------------------
-;; Org Mode.
-
-;; (use-package! org
-;;   :config
-;;   (progn
-;;     (require 'orgalist)
-;;     (orgalist-mode t)
-;;     )
-;;   )
-
-;;----------------------------------------------------------------------
-;; Org Present.
-;; https://elpa.nongnu.org/nongnu/org-present.html
-;; TODO: import configuration at https://systemcrafters.net/emacs-tips/presentations-with-org-present/
-
+;;--- Org Mode & Presentation ------------------------------------------
 (use-package! visual-fill-column
   :config
-  ;; Configure fill width.
-  (setq visual-fill-column-center-text t)
-  ;; (setq visual-fill-column-width 150
-  ;;       visual-fill-column-center-text t)
-  )
+  (setq visual-fill-column-center-text t))
 
-;; Unfold the current entry and show only direct subheadings of the
-;; slide but don't expand them.
-;; (defun my/org-present-prepare-slide (buffer-name heading)
-;;   ;; Show only top-level headlines
-;;   (org-overview)
-;;   ;; Unfold the current entry
-;;   (org-show-entry)
-;;   ;; Show only direct subheadings of the slide but don't expand them
-;;   (org-show-children))
-;; (add-hook 'org-present-after-navigate-functions 'my/org-present-prepare-slide)
-
-;; Minimal configuration.
 (use-package! org-present
   :config
-  (progn
-    (add-hook 'org-present-mode-hook
-              '(lambda ()
-                 (org-display-inline-images)
-                 (setq header-line-format " ")
-                 (visual-fill-column-mode t)
-                 (visual-line-mode t)
-                 )
-              )
-    (add-hook 'org-present-mode-quit-hook
-              (lambda ()
-                (org-remove-inline-images)
-                (setq header-line-format nil)
-                (visual-fill-column-mode nil)
-                (visual-line-mode nil)
-                )
-              )
-    )
-  )
+  (add-hook 'org-present-mode-hook
+            (lambda ()
+              (org-display-inline-images)
+              (setq header-line-format " ")
+              (visual-fill-column-mode t)
+              (visual-line-mode t)))
+  (add-hook 'org-present-mode-quit-hook
+            (lambda ()
+              (org-remove-inline-images)
+              (setq header-line-format nil)
+              (visual-fill-column-mode nil)
+              (visual-line-mode nil))))
 
-;;----------------------------------------------------------------------
-;; Perfect Margin.
-;; https://github.com/mpwang/perfect-margin
-
+;;--- Perfect Margin ---------------------------------------------------
 (use-package! perfect-margin
   :config
   (after! doom-modeline
     (setq mode-line-right-align-edge 'right-fringe))
   (after! minimap
-    ;; if you use (vc-gutter +pretty)
-    ;; and theme is causing "Invalid face attribute :foreground nil"
-    ;; (setq minimap-highlight-line nil)
-    (setq minimap-width-fraction 0.08))
-  ;; (setq perfect-margin-only-set-left-margin t)
-  ;; (perfect-margin-mode t)
-  )
+    (setq minimap-width-fraction 0.08)))
 
-;;----------------------------------------------------------------------
-;; Solve problem about text face related to tibble, rlang, messages and
-;; warnings.
-;; https://github.com/emacs-ess/ESS/issues/1193
-
+;;--- Shell Output Coloring --------------------------------------------
 (use-package! xterm-color
   :init
   (setq comint-output-filter-functions
-        (remove 'ansi-color-process-output comint-output-filter-functions))
+        (remove 'ansi-color-process-output
+                comint-output-filter-functions))
   (add-hook 'inferior-ess-mode-hook
-            (lambda () (add-hook 'comint-preoutput-filter-functions #'xterm-color-filter nil t)))
+            (lambda ()
+              (add-hook 'comint-preoutput-filter-functions
+                        #'xterm-color-filter nil t)))
   :config
   (setq xterm-color-use-bold t))
 
-;; ;; https://stackoverflow.com/a/72132446
-;; (defun xterm-color-colorize-shell-command-output ()
-;;   "Colorize `shell-command' output."
-;;   (let ((bufs
-;;          (seq-remove
-;;           (lambda (x)
-;;             (not (or (string-prefix-p " *Echo Area" (buffer-name x))
-;;                      (string-prefix-p "*Shell Command" (buffer-name x)))))
-;;           (buffer-list))))
-;;     (dolist (buf bufs)
-;;       (with-current-buffer buf
-;;         (xterm-color-colorize-buffer)))))
-;; (defun xterm-color-colorize-shell-command-output-advice (proc &rest rest)
-;;   (xterm-color-colorize-shell-command-output))
-;; (advice-add 'shell-command :after #'xterm-color-colorize-shell-command-output-advice)
-;; ;; (advice-remove 'shell-command #'xterm-color-colorize-shell-command-output-advice)
-
-;;----------------------------------------------------------------------
-;; MarkDown configuration.
-
-;; OrgStruct funcionally was removed from Org in version 9.2. The last
-;; version with it is 9.1.14.
-;; https://github.com/bzg/org-mode/releases/tag/release_9.1.14
-
-;; ATTENTION: lists only works with {1., a., -, +}. So, {1), *} are not
-;; recognized by `orgalist' package.
+;;--- Markdown ---------------------------------------------------------
 (use-package! markdown-mode
   :config
-  (progn
-    (require 'orgalist)
-    (orgalist-mode t)
-    (add-hook 'markdown-mode-hook
-              '(lambda ()
-                 (global-set-key (kbd "C-c *")
-                                 'orgalist-cycle-bullet)))
-    (require 'imenu-list)
-    (add-hook 'markdown-mode-hook 'imenu-add-menubar-index)
-    (add-hook 'markdown-mode-hook
-              '(lambda ()
-                 (global-set-key (kbd "<f10>")
-                                 'imenu-list-smart-toggle)))
-    ))
+  (require 'orgalist)
+  (orgalist-mode t)
+  (map! :map markdown-mode-map "C-c *" #'orgalist-cycle-bullet)
+  (add-hook 'markdown-mode-hook #'imenu-add-menubar-index)
+  (map! :map markdown-mode-map "<f10>" #'imenu-list-smart-toggle))
 
-;;----------------------------------------------------------------------
-;; essh.el - ESS like shell mode. To eval line/regions in Emacs shell.
-;; https://www.emacswiki.org/emacs/download/essh.el
-
-;; Download.
-(progn
-  (when (not (file-exists-p "~/.doom.d/essh.el"))
-    (url-copy-file
-     "https://www.emacswiki.org/emacs/download/essh.el"
-     "~/.doom.d/essh.el")))
-
-;; Bite compile.
-(when (not (file-exists-p "~/.doom.d/essh.elc"))
-  (byte-compile-file "~/.doom.d/essh.el"))
-
+;;--- ESSH (Emacs Speaks Statistics Shell) -----------------------------
 (use-package! essh
   :config
-  (add-hook
-   'sh-mode-hook
-   '(lambda ()
-      (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)
-      (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)
-      (define-key sh-mode-map "\C-c\C-j" 'pipe-line-to-shell)
-      (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step)
-      (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)
-      (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory))))
+  (add-hook! 'sh-mode-hook
+    (lambda ()
+      (map! :map sh-mode-map
+            "C-c C-r" #'pipe-region-to-shell
+            "C-c C-b" #'pipe-buffer-to-shell
+            "C-c C-j" #'pipe-line-to-shell
+            "C-c C-n" #'pipe-line-to-shell-and-step
+            "C-c C-f" #'pipe-function-to-shell
+            "C-c C-d" #'shell-cd-current-directory)))
+  ;; Imenu setup
+  (add-hook! 'sh-mode-hook
+             (lambda ()
+               (setq imenu-generic-expression
+                     (append '(("Blocks" "^# \\(.\\{1,15\\}\\)[^-]* ---+$" 1))
+                             (nthcdr 1 (car sh-imenu-generic-expression)))))))
 
-;; (defun my-shell-mode-setup-imenu ()
-;;   (setq imenu-generic-expression (append '(("Variables" "^\\([A-Z_]+\\)=.*" 1))
-;;                                          (nthcdr 1 (car sh-imenu-generic-expression)))))
-;; (add-hook 'sh-mode-hook 'my-shell-mode-setup-imenu)
-
-;; (defun my-block-mode-setup-imenu ()
-;;   (setq imenu-generic-expression (append '(("Blocks" "^# \\(.*\\) ---+$" 1))
-;;                                         (nthcdr 1 (car sh-imenu-generic-expression)))))
-;; (add-hook 'sh-mode-hook 'my-block-mode-setup-imenu)
-
-(defun my-block-mode-setup-imenu ()
-  (setq imenu-generic-expression
-        (append '(("Blocks" "^# \\(.\\{1,15\\}\\)[^-]* ---+$" 1))
-                (nthcdr 1 (car sh-imenu-generic-expression))
-                )
-        )
-  )
-(add-hook 'sh-mode-hook 'my-block-mode-setup-imenu)
-
-;;----------------------------------------------------------------------
-;; hi-lock.el - Highlight patterns in buffer.
-;; https://www.emacswiki.org/emacs/HiLock
-;; https://emacs.stackexchange.com/questions/15025/highlighting-automatically-on-file-open
-
-;; Download.
-(progn
-  (when (not (file-exists-p "~/.doom.d/hi-lock.el"))
-    (url-copy-file
-     "http://web.mit.edu/Emacs/source/emacs/lisp/hi-lock.el"
-     "~/.doom.d/hi-lock.el")))
-
-;; Bite compile.
-(when (not (file-exists-p "~/.doom.d/hi-lock.elc"))
-  (byte-compile-file "~/.doom.d/hi-lock.el"))
-
-;; M-s h r   highlight-regexp                    ;; <-- Create.
-;; M-s h w   hi-lock-write-interactive-patterns  ;; <-- Save in buffer.
-;; M-s h u   unhighlight-regexp
-;; M-s h p   highlight-phrase
-;; M-s h l   highlight-lines-matching-regexp
-;; M-s h f   hi-lock-find-patterns
+;;--- Hi-Lock ----------------------------------------------------------
 (use-package! hi-lock)
 
-;; Example of syntax resulted.
-;; Hi-lock: (("`.*`" (0 'hi-blue-b t)))
-;; Hi-lock: (("{.*}" (0 'hi-blue-b t)))
-;; QUESTION: activate this for some modes.
-
 ;;----------------------------------------------------------------------
-;; TODO Read this
-;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+;; 6. Programming Languages
+;;----------------------------------------------------------------------
 
-;; ;; https://github.com/emacs-lsp/lsp-mode/issues/1383
-;; (use-package! lsp-mode
-;;   :config
-;;   (setq lsp-enable-snippet t
-;;         lsp-prefer-flymake nil)
-;;   (setq lsp-eldoc-hook '(lsp-hover))
-;;   (remove-hook 'lsp-eldoc-hook 'lsp-document-highlight))
-
-;; (setq lsp-restart 'ignore)
-;; (setq lsp-restart 'auto-restart)
-;; (setq lsp-keep-workspace-alive nil)
-
-;; TODO Read all this. The code below was inspired here:
-;; https://awesomeopensource.com/project/MatthewZMD/.emacs.d
-
-;; https://github.com/emacs-lsp/lsp-ui
+;;--- LSP UI -----------------------------------------------------------
 (use-package! lsp-ui
-  :commands lsp-ui-mode
+  :after lsp-mode
   :custom
   (lsp-ui-doc-header t)
   (lsp-ui-doc-include-signature t)
@@ -625,51 +334,23 @@
   :config
   (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
   (map! :map lsp-ui-mode-map
-        ;; ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-        ;; ([remap xref-find-references] . lsp-ui-peek-find-references)
         "C-c u" #'lsp-ui-doc-show
-        "M-i" #'lsp-ui-doc-focus-frame
-        )
+        "M-i"   #'lsp-ui-doc-focus-frame)
   (map! :map lsp-mode-map
-        "M-n" #'forward-paragraph
-        "M-p" #'backward-paragraph
-        )
-  ;; Use lsp-ui-doc-webkit only in GUI
-  ;; (if (display-graphic-p)
-  ;;     (setq lsp-ui-doc-use-webkit t))
-  ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
-  ;; https://github.com/emacs-lsp/lsp-ui/issues/243
-  (defadvice
-      lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
+        "M-n"   #'forward-paragraph
+        "M-p"   #'backward-paragraph)
+  ;; Hide mode-line of the lsp-ui-imenu buffer
+  (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
     (setq mode-line-format nil)))
 
-;; TODO Doom-emacs configuration. How to use `use-package!' fields.
-;; https://tecosaur.github.io/emacs-config/config.html
-
-;; TODO Take this project as a referece of Doom-Emacs.
-;; https://dotdoom.rgoswami.me/config.html
-
-;;----------------------------------------------------------------------
-;; lsp-treemacs
-;; https://github.com/emacs-lsp/lsp-treemacs
-
+;;--- LSP Treemacs -----------------------------------------------------
 (use-package! lsp-treemacs
   :bind
   ("C-<f8>" . lsp-treemacs-symbols-toggle)
-  ("<f8>" . lsp-ui-imenu-toggle)
-  )
+  ("<f8>"   . lsp-ui-imenu-toggle))
 
-;;----------------------------------------------------------------------
-;; ESS - Emacs Speaks Statistics.
-;; http://ess.r-project.org/
-
-;; Automatically connecting to remote R sessions in Emacs using ESS
-;; https://www.dcalacci.net/2018/remote-ess/
-
-;; (add-hook 'ess-mode-hook #'lsp-deferred)
-
+;;--- R (ESS) ----------------------------------------------------------
 (use-package! ess
-  ;; (ess :variables ess-r-backend 'lsp)
   :init
   (progn
     (setq-default ess-dialect "R")
@@ -680,19 +361,16 @@
           comint-scroll-to-bottom-on-output t
           comint-move-point-for-output t
           ess-indent-offset 4)
-    ;; Garante que o Flymake do ESS está desligado para usarmos o Flycheck.
-    (setq ess-use-flymake nil)
-    )
+    (setq ess-use-flymake nil))
   :bind
   (("C-S-<f5>" . ess-eval-chunk)
    ("C-S-<f6>" . ess-eval-chunk-and-step)
    ("C-S-<f7>" . ess-noweb-next-code-chunk)
    ("C-S-<f8>" . ess-noweb-previous-code-chunk)
    ("C-S-<f9>" . ess-noweb-goto-chunk)
-   ;; Native pipe.
-   ("C-|" . " |>"))
+   ("C-|"      . " |>")) ; Native pipe
   :config
-  ;; Script and console font lock highlight.
+  ;; Font lock settings
   (setq ess-R-font-lock-keywords
         '((ess-R-fl-keyword:modifiers . t)
           (ess-R-fl-keyword:fun-defs . t)
@@ -723,331 +401,214 @@
   (add-hook
    'ess-mode-hook
    '(lambda ()
-      ;;-------------------------------------
       (require 'ess-site)
       (require 'ess-view-data)
-      ;; (setq ess-view-data-mode t)
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
-      ;; (ess-toggle-underscore nil)
-      ;;
-      ;; https://stackoverflow.com/questions/7502540/make-emacs-ess-follow-r-style-guide
-      ;; (ess-set-style 'C++)
       (ess-set-style 'RStudio)
-      ;; (setq ess-offset-arguments 'prev-line)
-      ;; (set 'ess-arg-function-offset t)
-      ;;
-      ;;-------------------------------------
-      ;; LSP.
-      ;; https://github.com/emacs-lsp/lsp-ui/issues/367
-      (setq lsp-enable-symbol-highlighting nil)
-      (setq lsp-signature-auto-activate nil)
-      (setq lsp-ui-doc-enable nil)
-      (setq lsp-diagnostics-provider :none)
-      (setq lsp-restart 'ignore)
-      ;; (setq lsp-enable-symbol-highlighting nil) ;; https://github.com/syl20bnr/spacemacs/issues/13934
-      ;;
-      ;; Company. ---------------------------
-      ;; (company-mode 1)
-      ;; (setq ess-use-company 'script-only)
-      ;; `Alt + -'  to cycle `<- | <<- | = ...'.
+      ;; LSP & Company configuration
+      (setq lsp-enable-symbol-highlighting nil
+            lsp-signature-auto-activate nil
+            lsp-ui-doc-enable nil
+            lsp-diagnostics-provider :none
+            lsp-restart 'ignore)
+      ;; Keybindings
       (define-key ess-mode-map [?\M--] 'ess-cycle-assign)
-      (define-key ess-mode-map [S-f5] 'company-R-args)    ;; S-F5 do show ARGS.
-      (define-key ess-mode-map [C-f5] 'company-R-objects) ;; C-F5 complete objects.
-      (flycheck-mode 1)        ;; Enable/disable flycheck/lintr.
+      (define-key ess-mode-map [S-f5] 'company-R-args)
+      (define-key ess-mode-map [C-f5] 'company-R-objects)
       )
    )
-  ;; SOLVED: https://github.com/syl20bnr/spacemacs/issues/5395#issuecomment-297027630
   (add-hook
    'inferior-ess-mode-hook
    '(lambda ()
       (setq-local comint-use-prompt-regexp nil)
-      (setq-local inhibit-field-text-motion nil)
-      (flycheck-mode -1)        ;; Disable flycheck/lintr.
-      )
-   )
-  ;;-----------------------------------------
+      (setq-local inhibit-field-text-motion nil)))
+  ;; Prevent accidental buffer evaluation
   (defadvice ess-eval-buffer (before really-eval-buffer compile activate)
-    "Prevent call ess-eval-buffer by accident, frequently by
-     hitting C-c C-b instead of C-c C-n."
     (if (yes-or-no-p
          (format "Are you sure you want to evaluate the %s buffer?"
                  buffer-file-name))
         (message "ess-eval-buffer started.")
-      (error "ess-eval-buffer canceled!")))
-  )
+      (error "ess-eval-buffer canceled!"))))
 
-;;----------------------------------------------------------------------
-;; Smart operators with electric spacing.
-;; https://github.com/walmes/electric-spacing (fork).
+;; Turn off flycheck in LSP for R (ESS) buffers.
+;; (add-hook! 'lsp-mode-hook
+;;     (defun wz-disable-flycheck-in-lsp-r-only ()
+;;         "Desativa o flycheck no LSP apenas se o buffer for de R (ESS)."
+;;         (when (derived-mode-p 'ess-mode)
+;;             (flycheck-mode -1))))
 
-;; Download.
-(progn
-  (when (not (file-exists-p "~/.doom.d/electric-spacing-r.el"))
-    (url-copy-file
-     "https://raw.githubusercontent.com/walmes/electric-spacing/master/electric-spacing-r.el"
-     "~/.doom.d/electric-spacing-r.el")))
+(add-hook! 'lsp-mode-hook
+    (defun wz-disable-flycheck-in-lsp-selected-modes ()
+        "Desativa o flycheck no LSP apenas para R (ESS) e Python."
+        (when (derived-mode-p 'ess-mode 'python-mode)
+            (flycheck-mode -1))))
 
-;; Bite compile.
-(when (not (file-exists-p "~/.doom.d/electric-spacing-r.elc"))
-  (byte-compile-file "~/.doom.d/electric-spacing-r.el"))
-
+;;--- Electric Spacing (R) ---------------------------------------------
 (use-package! electric-spacing-r
   :config
   (add-hook 'ess-mode-hook #'electric-spacing-mode)
   (add-hook 'python-mode-hook #'electric-spacing-mode))
 
-;----------------------------------------------------------------------
-;; R+MarkDown extensions (emacs >= 24.3.1).
-;; (IT MUST BE BEFORE LATEX EXTENSIONS.)
-
-;; Based on:
-;; https://github.com/fernandomayer/spacemacs/blob/master/private/polymode/packages.el#L13
-
-;; `polymode' is included in `ess' module.
-;; (use-package polymode
-;;   :mode (("\\.Rmd" . Rmd-mode))
-;;   :init
-;;   (progn
-;;     (defun Rmd-mode ()
-;;       "ESS Markdown mode for Rmd files"
-;;       (interactive)
-;;       (require 'poly-R)
-;;       (require 'poly-markdown)
-;;       (R-mode)
-;;       (poly-markdown+r-mode))
-;;     ))
-;; (use-package polymode
-;;   :mode (("\\.Rnw" . Rnw-mode))
-;;   :init
-;;   (progn
-;;     (defun Rnw-mode ()
-;;       "ESS LaTeX mode for Rnw files"
-;;       (interactive)
-;;       (require 'poly-R)
-;;       (require 'poly-noweb)
-;;       (R-mode)
-;;       (poly-noweb+r-mode))
-;;     ))
-
-;;----------------------------------------------------------------------
-;; Stan.
-
-;; ;;; stan-mode.el
-;; (use-package! stan-mode
-;;   :mode ("\\.stan\\'" . stan-mode)
-;;   :hook (stan-mode . stan-mode-setup)
-;;   ;;
-;;   :config
-;;   ;; The officially recommended offset is 2.
-;;   (setq stan-indentation-offset 2))
-
-;; ;;; company-stan.el
-;; (use-package! company-stan
-;;   :hook (stan-mode . company-stan-setup)
-;;   ;;
-;;   :config
-;;   ;; Whether to use fuzzy matching in `company-stan'
-;;   (setq company-stan-fuzzy nil))
-
-;; ;;; eldoc-stan.el
-;; (use-package! eldoc-stan
-;;   :hook (stan-mode . eldoc-stan-setup)
-;;   ;;
-;;   :config
-;;   ;; No configuration options as of now.
-;;   )
-
-;; ;;; flycheck-stan.el
-;; (use-package! flycheck-stan
-;;   ;; Add a hook to setup `flycheck-stan' upon `stan-mode' entry
-;;   :hook ((stan-mode . flycheck-stan-stanc2-setup)
-;;          (stan-mode . flycheck-stan-stanc3-setup))
-;;   :config
-;;   ;; A string containing the name or the path of the stanc2 executable
-;;   ;; If nil, defaults to `stanc2'
-;;   (setq flycheck-stanc-executable nil)
-;;   ;; A string containing the name or the path of the stanc2 executable
-;;   ;; If nil, defaults to `stanc3'
-;;   (setq flycheck-stanc3-executable nil))
-
-;; ;;; stan-snippets.el
-;; (use-package! stan-snippets
-;;   :hook (stan-mode . stan-snippets-initialize)
-;;   ;;
-;;   :config
-;;   ;; No configuration options as of now.
-;;   )
-
-;; ;;; ac-stan.el (Not on MELPA; Need manual installation)
-;; (use-package! ac-stan
-;;   :load-path "path-to-your-directory/ac-stan/"
-;;   ;; Delete the line below if using.
-;;   :disabled t
-;;   :hook (stan-mode . stan-ac-mode-setup)
-;;   ;;
-;;   :config
-;;   ;; No configuration options as of now.
-;;   )
-
-;;----------------------------------------------------------------------
-;; Quarto.
-
+;;--- Quarto -----------------------------------------------------------
 (use-package! quarto-mode)
 
-;;----------------------------------------------------------------------
-;; Python as a IDE with REPL.
+;;--- Python -----------------------------------------------------------
+;; Note: Doom has a `(python +lsp)` module that handles much of this.
+;; Please ensure you have enabled `(python +lsp)` in `init.el`.
 
-;; ATTENTION: adds to yout `~/.bachrc' file
-;; $ export PATH="$HOME/anaconda3/bin:$PATH"
-
-;; To install .NET and use MS Python Language Server (`mypyls').
-;; https://dotnet.microsoft.com/en-us/download
-;; $ sudo snap install --classic dotnet-sdk
-;;
-;; Install `mypyls'.
-;; $ cd ~/Documents/
-;; $ git clone https://github.com/Microsoft/python-language-server.git
-;; $ cd python-language-server/src/LanguageServer/Impl
-;; $ dotnet publish -c Release -r linux-x64
-;; $ chmod a+x $(git rev-parse --show-toplevel)/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer
-;;
-;; Adds the following configuration at `config.el`.
-;; (setq lsp-python-ms-executable
-;;       "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer")
-
-(use-package! python
-  ;; :hook
-  ;; (python-mode . lsp-deferred)
-  ;; :bind (:map python-mode-map
-  ;;             ;; Use this if not usiung Elpy.
-  ;;             ;; ("C-<return>" . python-shell-send-statement)
-  ;;             )
-  :config
-  (setq python-indent-offset 4)
-  ;; (setq python-shell-interpreter "/home/walmes/anaconda3/bin/python3") ;; ATTENTION: not use, cause conflict with jedi.
-  ;; (define-key python-mode-map [S-f5] 'company-complete)
-  ;; (define-key python-mode-map [S-f6] 'complete-symbol)
-  ;; ATTENTION: Third party software installed apart.
-  (setq lsp-python-ms-executable
-        "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer")
-  )
-
-;; Elpy, the Emacs Python IDE. Elpy is an Emacs package to bring
-;; powerful Python editing to Emacs. It combines and configures a number
-;; of other packages, both written in Emacs Lisp as well as Python.
-;; https://github.com/jorgenschaefer/elpy
-;;
-;; Main commands
-;; C-c C-c: evaluates the buffer or region.
-;; C-RET: evaluates the block.
-;; C-c C-z: switches between your script and the interactive shell.
-;; C-c C-d: displays documentation for the thing under cursor.
-(use-package! elpy
-  :init
-  (elpy-enable)
-  :config
-  ;; Elpy will install RPC dependencies automatically.
-  (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3")
-  )
-
-;; Check the backend enabled.
-;; (describe-variable 'company-backends)
-
-;; To list conda envs.
-;;   cd anaconda
-;;   source activate
-;;   conda info --envs
-;; (use-package pyvenv
-;;   :ensure t
-;;   :init
-;;   (setenv "WORKON_HOME" "~/anaconda3"))
-
-;; ATTENTION:
-;; Choose an anaconda Env:
-;;   M-x conda-env-activate base
-;; Restart LSP:
-;;   M-x lsp ...or... M-x lsp-restart-workspace
-
-;; https://www.reddit.com/r/emacs/comments/hkshob/save_correct_condaenv_for_project/fwxty9v
-;;
-;; 1. Set `conda-project-env-name' as a directory local variable. (With
-;;    projectile you could use the `projectile-edit-dir-locals'
-;;    command.)
-;;
-;; 2. Use `conda-env-activate-for-buffer' to activate the environment
-;;    set. (Or enable `conda-env-autoactivate-mode' to automatically
-;;    activate it.)
-
-;; A conda environment manager, assuming the use of Anaconda and the
-;; `conda` tool. See https://github.com/necaris/conda.el for more
-;; details. https://melpa.org/#/conda.
-(use-package! conda
-  :init
-  (setq conda-anaconda-home (expand-file-name "~/anaconda3"))
-  (setq conda-env-home-directory (expand-file-name "~/anaconda3"))
-  :config
-  (conda-env-initialize-interactive-shells)
-  (conda-env-initialize-eshell)
-  ;; (conda-env-activate 'getenv "CONDA_DEFAULT_ENV")
-  (conda-env-autoactivate-mode t)
-  )
-
-;; Code navigation, documentation lookup and completion for Python.
-;; https://github.com/pythonic-emacs/anaconda-mode
-;; https://melpa.org/#/anaconda-mode
-(use-package! anaconda-mode
-  :bind (:map python-mode-map ("C-:" . company-anaconda))
-  :hook
-  (python-mode . anaconda-mode)
-  (python-mode . anaconda-eldoc-mode)
-  ;; :init
-  ;; (add-hook 'python-mode-hook 'anaconda-mode)
-  ;; (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
-)
-
-;; IMPORTANT: check the benefits of lsp-jedi.
-;; https://github.com/fredcamps/lsp-jedi
-;; https://pypi.org/project/jedi-language-server/
-
-;; ;; pip install -U jedi-language-server
-;; (use-package lsp-jedi
-;;   :ensure t
+;; (use-package! python
 ;;   :config
-;;   (with-eval-after-load "lsp-mode"
-;;     (message "HERE lsp-jedi")
-;;     (add-to-list 'lsp-disabled-clients 'pyls)
-;;     (add-to-list 'lsp-enabled-clients 'jedi)))
+;;   (setq python-indent-offset 4)
+;;   ;; Path to MS Python Language Server if required manually
+;;   (setq lsp-python-ms-executable
+;;         "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer"))
+;;
+;; (use-package! elpy
+;;   :init (elpy-enable)
+;;   :config
+;;   (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3"))
+;;
+;; (use-package! conda
+;;   :init
+;;   (setq conda-anaconda-home (expand-file-name "~/anaconda3")
+;;         conda-env-home-directory (expand-file-name "~/anaconda3"))
+;;   :config
+;;   (conda-env-initialize-interactive-shells)
+;;   (conda-env-initialize-eshell)
+;;   (conda-env-autoactivate-mode t))
+;;
+;; (use-package! anaconda-mode
+;;   :hook
+;;   (python-mode . anaconda-mode)
+;;   (python-mode . anaconda-eldoc-mode))
+
+;; ---- Configuração Python & Anaconda ---------------------------------
+
+;;$ source ~/anaconda3/bin/activate
+;;$ conda activate base
+;;$ pip install pyright
+
+;; Install LSP: `M-x lsp-install-server'.
+;; Activate a conda virtual environment: `M-x conda-env-activate'.
+;; Open Python REPL: `M-x run-python'.
+
+(after! python
+  ;; 1. Força o modo interativo para garantir o echo.
+  (setq python-shell-interpreter-args "-i")
+
+  ;; 2. Resolve o aviso "TERM=dumb" e o erro do pyrepl (Python 3.13+).
+  ;; Isso diz ao Python para não tentar ser "esperto" dentro do Emacs.
+  (setenv "PYTHON_BASIC_REPL" "1")
+  ;;
+  ;; ;; Opcional: Garante que o Python ignore variáveis de ambiente do sistema
+  ;; ;; que possam forçar terminais coloridos/complexos.
+  ;; (setenv "TERM" "dumb")
+
+  ;; Define o interpretador padrão do Anaconda.
+  (setq python-shell-interpreter (expand-file-name "~/anaconda3/bin/python3"))
+
+  ;; Função: Envia a linha e pula para a próxima (Estilo Ctrl+Enter do R).
+  ;; (defun wz-python-send-line-and-step ()
+  ;;   "Envia a linha atual para o shell do Python e move para a próxima."
+  ;;   (interactive)
+  ;;   (python-shell-send-statement)
+  ;;   (forward-line 1))
+
+  (defun wz-python-send-line-and-step ()
+    "Envia a linha para o Python. Abre o processo se não existir,
+divide a janela e garante a inicialização correta."
+    (interactive)
+    (let ((proc (python-shell-get-process))
+          (cmd (python-shell-calculate-command))) ; Usa o path do Anaconda definido no config
+      (unless proc
+        (save-selected-window
+          ;; O 't' faz o split. O 'save-selected-window' devolve o foco.
+          (run-python cmd nil t)
+          (setq proc (python-shell-get-process))
+          ;; Sincronização: Aguarda 0.5s para o Python carregar
+          ;; as funções internas do Emacs (__PYTHON_EL_eval)
+          (accept-process-output proc 0.5)))
+
+      ;; Envia o código e pula para a próxima linha.
+      (python-shell-send-statement)
+      (forward-line 1)))
+
+  ;; Mapeamento de Teclas (Para usuários de Leader/Emacs-style).
+  (map! :map python-mode-map
+        ;; Atalho universal de execução.
+        "C-<return>" #'wz-python-send-line-and-step
+
+        ;; Atalhos com Local-Leader (C-c C-z, C-c C-r, etc).
+        :localleader
+        "z" #'python-shell-switch-to-shell  ; Alterna entre script e terminal.
+        "r" #'python-shell-send-region      ; Envia bloco selecionado.
+        "b" #'python-shell-send-buffer      ; Envia o arquivo todo.
+        "f" #'python-shell-send-defun)      ; Envia a função atual.
+  )
+
+(add-hook! python-mode
+  ;; Configurações de variáveis locais
+  (setq-local lsp-diagnostics-provider :none
+              comment-add 0)
+  ;; Ativação/Desativação de Minor Modes.
+  (flycheck-mode -1))
+
+;; ---- Configuração de Auto-scroll no Python REPL ---------------------
+(add-hook 'inferior-python-mode-hook
+    (lambda ()
+      ;; Move o cursor para o final ao enviar novos comandos.
+      (setq-local comint-scroll-to-bottom-on-input t)
+      ;; Move o cursor para o final quando o Python retorna texto.
+      (setq-local comint-scroll-to-bottom-on-output t)
+      ;; Garante que o ponto (cursor) acompanhe a rolagem.
+      (setq-local comint-move-point-for-output t)))
+
+;; ---- Integração Conda & LSP -----------------------------------------
+(use-package! conda
+    :init
+    ;; Caminhos para sua instalação do Anaconda.
+    (setq conda-anaconda-home (expand-file-name "~/anaconda3")
+          conda-env-home-directory (expand-file-name "~/anaconda3"))
+    :config
+    ;; Ativa o ambiente automaticamente se houver um environment.yml no projeto.
+    (conda-env-autoactivate-mode t)
+
+    ;; Sincronização Crucial: Ao trocar de ambiente no Conda, o LSP
+    ;; e o Interpretador de Python devem se atualizar.
+    (add-hook 'conda-postactivate-hook
+              (lambda ()
+                  ;; Atualiza o interpretador para o Python do novo ambiente.
+                  (setq python-shell-interpreter
+                        (concat conda-env-current-path "/bin/python3"))
+                  ;; Reinicia o LSP para ler as bibliotecas do novo ambiente.
+                  ;; (lsp-restart-workspace)
+                  (sp-workspace-restart))))
+
+;; ---- Ajustes de Interface do Python ---------------------------------
+(after! lsp-pyright
+    ;; Configurações do servidor Pyright (padrão Microsoft/VS Code).
+    (setq lsp-pyright-python-executable-cmd
+          (expand-file-name "~/anaconda3/bin/python3"))
+    (setq lsp-pyright-multi-root nil))
 
 ;;----------------------------------------------------------------------
-;; GPTel - Emacs client for OpenAI's GPT-3 API.
+;; 7. AI & Code Assistance
+;;----------------------------------------------------------------------
 
-;; To declare the environment variable in `custom.el` file.
-;; (custom-set-variables
-;;   '(process-environment (quote ("OPENAI_API_KEY_GPTEL=sk-..."))))
-;;
-;; Or put in `~/.bashrc` file: `$ export OPENAI_API_KEY_GPTEL=sk-...`
-
+;;--- GPTel ------------------------------------------------------------
 (use-package! gptel
   :config
-  ;; Lê a variável de ambiente OPENAI_API_KEY_GPTEL no Ubuntu.
   (setq! gptel-api-key (getenv "OPENAI_API_KEY_GPTEL")))
 
-;;----------------------------------------------------------------------
-;; Github Copilot.
-;; https://github.com/zerolfx/copilot.el#example-for-doom-emacs
-
-;; accept completion from copilot and fallback to company
+;;--- Copilot ----------------------------------------------------------
 (use-package! copilot
   :hook (prog-mode . copilot-mode)
   :bind (:map copilot-completion-map
-              ("<tab>" . 'copilot-accept-completion)
-              ("TAB" . 'copilot-accept-completion)
+              ("TAB"   . 'copilot-accept-completion)
               ("C-TAB" . 'copilot-accept-completion-by-word)
-              ("C-<tab>" . 'copilot-accept-completion-by-word)
-              ("C-n" . 'copilot-next-completion)
-              ("C-p" . 'copilot-previous-completion))
-
+              ("C-n"   . 'copilot-next-completion)
+              ("C-p"   . 'copilot-previous-completion))
   :config
   (customize-set-variable 'copilot-enable-predicates nil)
   (add-to-list 'copilot-indentation-alist '(prog-mode 2))
@@ -1057,159 +618,98 @@
   (add-to-list 'copilot-indentation-alist '(closure-mode 2))
   (add-to-list 'copilot-indentation-alist '(emacs-lisp-mode 2)))
 
-;;----------------------------------------------------------------------
-;; codeium.el - Codeium is a code intelligence service that provides
-;; completions, documentation, and more for many languages.
-;; https://github.com/Exafunction/codeium.el
-
-;; we recommend using use-package to organize your init.el
-(use-package! codeium
-    ;; if you use straight
-    ;; :straight '(:type git :host github :repo "Exafunction/codeium.el")
-    ;; otherwise, make sure that the codeium.el file is on load-path
-
-    :init
-    ;; use globally
-    (add-to-list 'completion-at-point-functions #'codeium-completion-at-point)
-    ;; or on a hook
-    ;; (add-hook 'python-mode-hook
-    ;;     (lambda ()
-    ;;         (setq-local completion-at-point-functions '(codeium-completion-at-point))))
-
-    ;; if you want multiple completion backends, use cape (https://github.com/minad/cape):
-    ;; (add-hook 'python-mode-hook
-    ;;     (lambda ()
-    ;;         (setq-local completion-at-point-functions
-    ;;             (list (cape-super-capf #'codeium-completion-at-point #'lsp-completion-at-point)))))
-    ;; an async company-backend is coming soon!
-
-    ;; codeium-completion-at-point is autoloaded, but you can
-    ;; optionally set a timer, which might speed up things as the
-    ;; codeium local language server takes ~0.2s to start up
-    ;; (add-hook 'emacs-startup-hook
-    ;;  (lambda () (run-with-timer 0.1 nil #'codeium-init)))
-
-    ;; :defer t ;; lazy loading, if you want
-    :config
-    (setq use-dialog-box nil) ;; do not use popup boxes
-
-    ;; if you don't want to use customize to save the api-key
-    ;; (setq codeium/metadata/api_key "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
-
-    ;; get codeium status in the modeline
-    (setq codeium-mode-line-enable
-        (lambda (api) (not (memq api '(CancelRequest Heartbeat AcceptCompletion)))))
-    (add-to-list 'mode-line-format '(:eval (car-safe codeium-mode-line)) t)
-    ;; alternatively for a more extensive mode-line
-    ;; (add-to-list 'mode-line-format '(-50 "" codeium-mode-line) t)
-
-    ;; use M-x codeium-diagnose to see apis/fields that would be sent to the local language server
-    (setq codeium-api-enabled
-        (lambda (api)
-            (memq api '(GetCompletions Heartbeat CancelRequest GetAuthToken RegisterUser auth-redirect AcceptCompletion))))
-    ;; you can also set a config for a single buffer like this:
-    ;; (add-hook 'python-mode-hook
-    ;;     (lambda ()
-    ;;         (setq-local codeium/editor_options/tab_size 4)))
-
-    ;; You can overwrite all the codeium configs!
-    ;; for example, we recommend limiting the string sent to codeium for better performance
-    (defun my-codeium/document/text ()
-        (buffer-substring-no-properties (max (- (point) 3000) (point-min)) (min (+ (point) 1000) (point-max))))
-    ;; if you change the text, you should also change the cursor_offset
-    ;; warning: this is measured by UTF-8 encoded bytes
-    (defun my-codeium/document/cursor_offset ()
-        (codeium-utf8-byte-length
-            (buffer-substring-no-properties (max (- (point) 3000) (point-min)) (point))))
-    (setq codeium/document/text 'my-codeium/document/text)
-    (setq codeium/document/cursor_offset 'my-codeium/document/cursor_offset))
+;; ;;--- Codeium ----------------------------------------------------------
+;; (use-package! codeium
+;;   :init
+;;   (add-to-list 'completion-at-point-functions #'codeium-completion-at-point)
+;;   :config
+;;   (setq use-dialog-box nil)
+;;   (setq codeium-mode-line-enable
+;;         (lambda (api) (not (memq api '(CancelRequest
+;;                                        Heartbeat
+;;                                        AcceptCompletion)))))
+;;   (add-to-list 'mode-line-format '(:eval (car-safe codeium-mode-line)) t)
+;;   (setq codeium-api-enabled
+;;         (lambda (api)
+;;           (memq api '(GetCompletions
+;;                       Heartbeat
+;;                       CancelRequest
+;;                       GetAuthToken
+;;                       RegisterUser
+;;                       auth-redirect
+;;                       AcceptCompletion))))
+;;   ;; Optimization functions
+;;   (defun my-codeium/document/text ()
+;;     (buffer-substring-no-properties
+;;      (max (- (point) 3000) (point-min))
+;;      (min (+ (point) 1000) (point-max))))
+;;   (defun my-codeium/document/cursor_offset ()
+;;     (codeium-utf8-byte-length
+;;      (buffer-substring-no-properties
+;;       (max (- (point) 3000) (point-min)) (point))))
+;;   (setq codeium/document/text 'my-codeium/document/text)
+;;   (setq codeium/document/cursor_offset 'my-codeium/document/cursor_offset))
 
 ;;----------------------------------------------------------------------
-;; Add highlighting for certain keywords.
-
-;; http://lists.gnu.org/archive/html/emacs-orgmode/2010-09/txtb5ChQJCDny.txt
-;; http://emacs.1067599.n5.nabble.com/Adding-keywords-for-font-lock-experts-td95645.html
-
-(dolist
-    (mode '(fundamental-mode emacs-lisp-mode lisp-mode org-mode
-            shell-mode sh-mode ess-mode ess-r-mode polymode-mode
-            python-mode markdown-mode latex-mode TeX-mode
-            prog-mode web-mode html-mode css-mode yaml-mode
-            js-mode))
-  (setq font-lock-keywords-case-fold-search t)
-  (font-lock-add-keywords
-   mode
-   '(("\\(^\\|[[:space:]]\\)@[[:alnum:]_.]+\\>"
-      0 'font-lock-function-name-face t))
-   ;; @walmes, @param, @return
-   ))
-
+;; 8. Syntax Highlighting Extras
 ;;----------------------------------------------------------------------
-;; hl-todo.
 
-(defface hl-todo-caution-words
-  '((t :foreground "OrangeRed"
-       :background "LightGray"
-       :inherit (hl-todo)))
-  "Face for highlighting the CAUTION keyword.")
+;; Custom Keyword Highlighting (e.g. @walmes, @param)
+(dolist (mode '(fundamental-mode emacs-lisp-mode lisp-mode org-mode
+                shell-mode sh-mode ess-mode ess-r-mode polymode-mode
+                python-mode markdown-mode latex-mode TeX-mode
+                prog-mode web-mode html-mode css-mode yaml-mode
+                js-mode))
+  (add-hook! mode
+    (lambda ()
+      (setq font-lock-keywords-case-fold-search t)
+      (font-lock-add-keywords
+       nil ; specific to current buffer via hook
+       '(("\\(^\\|[[:space:]]\\)@[[:alnum:]_.]+\\>"
+          0 'font-lock-function-name-face t))))))
 
-(defface hl-todo-good-words
-  '((t :foreground "LightSeaGreen"
-       :background "White"
-       :inherit (hl-todo)))
-  "Face for highlighting the GOOD/POSITIVE keyword.")
-
-(defface hl-todo-bad-words
-  '((t :foreground "White"
-       :background "Firebrick"
-       :inherit (hl-todo)))
-  "Face for highlighting the BAD/NEGATIVE keyword.")
-
-;; https://github.com/tarsius/hl-todo
+;; HL-TODO
 (use-package! hl-todo
   :bind
   ("C-c l m" . hl-todo-previous)
   ("C-c l n" . hl-todo-next)
   :config
-  ;; (message "final do arquivo")
   (global-hl-todo-mode t)
-  (add-to-list 'hl-todo-keyword-faces '("IMPROVE"     font-lock-constant-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("QUESTION"    font-lock-constant-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("EXPLANATION" font-lock-constant-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("THEORY"      font-lock-constant-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("DESCRIPTION" font-lock-keyword-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("COMMENT"     font-lock-keyword-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("TIP"         font-lock-keyword-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("TRICK"       font-lock-keyword-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("INFO"        font-lock-keyword-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("INFORMATION" font-lock-keyword-face bold))
-  (add-to-list 'hl-todo-keyword-faces '("DANGER"      error bold))
-  (add-to-list 'hl-todo-keyword-faces '("STOP"        error bold))
-  (add-to-list 'hl-todo-keyword-faces '("FAIL"        error bold))
-  (add-to-list 'hl-todo-keyword-faces '("WARNING"     error bold))
-  (add-to-list 'hl-todo-keyword-faces '("ERROR"       error bold))
-  (add-to-list 'hl-todo-keyword-faces '("BUG"         error bold))
-  (add-to-list 'hl-todo-keyword-faces '("DEBUG"       warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("IMPORTANT"   warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("ATTENTION"   warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("CAUTION"     warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("OBS"         warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("PROBLEM"     warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("DISCLAIMER"  warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("EXERCISE"    warning bold))
-  (add-to-list 'hl-todo-keyword-faces '("BONUS"       success bold))
-  (add-to-list 'hl-todo-keyword-faces '("DONE"        success bold))
-  (add-to-list 'hl-todo-keyword-faces '("OKAY"        success bold))
-  (add-to-list 'hl-todo-keyword-faces '("GOOD"        success bold))
-  (add-to-list 'hl-todo-keyword-faces '("SOLVED"      success bold))
-  (add-to-list 'hl-todo-keyword-faces '("OPTIONAL"    success bold))
-  (add-to-list 'hl-todo-keyword-faces '("WALMES"    . hl-todo-good-words))
-  )
+  (setq hl-todo-keyword-faces
+        (append hl-todo-keyword-faces
+                '(("IMPROVE"     . font-lock-constant-face)
+                  ("QUESTION"    . font-lock-constant-face)
+                  ("EXPLANATION" . font-lock-constant-face)
+                  ("THEORY"      . font-lock-constant-face)
+                  ("DESCRIPTION" . font-lock-keyword-face)
+                  ("COMMENT"     . font-lock-keyword-face)
+                  ("TIP"         . font-lock-keyword-face)
+                  ("TRICK"       . font-lock-keyword-face)
+                  ("INFO"        . font-lock-keyword-face)
+                  ("INFORMATION" . font-lock-keyword-face)
+                  ("DANGER"      . error)
+                  ("STOP"        . error)
+                  ("FAIL"        . error)
+                  ("WARNING"     . error)
+                  ("ERROR"       . error)
+                  ("BUG"         . error)
+                  ("DEBUG"       . warning)
+                  ("IMPORTANT"   . warning)
+                  ("ATTENTION"   . warning)
+                  ("CAUTION"     . warning)
+                  ("REVIEW"      . warning)
+                  ("OBS"         . warning)
+                  ("PROBLEM"     . warning)
+                  ("DISCLAIMER"  . warning)
+                  ("EXERCISE"    . warning)
+                  ("BONUS"       . success)
+                  ("DONE"        . success)
+                  ("OKAY"        . success)
+                  ("GOOD"        . success)
+                  ("SOLVED"      . success)
+                  ("OPTIONAL"    . success)))))
 
-;;----------------------------------------------------------------------
-;; hl-prog-extra.
-;; https://gitlab.com/ideasman42/emacs-hl-prog-extra
-
+;; HL-Prog-Extra
 (use-package! hl-prog-extra
   :commands (hl-prog-extra-mode)
   :config
@@ -1220,12 +720,8 @@
          ;; To highlight code: `code`.
          '("`[^`]+`" 1 comment-only font-lock-constant-face)
          ;; Match URLs: http://xyz.com.
-         '("\\<https?://[^[:blank:]]*" 1 comment success)
-         ;; Match email address: <email@name.foo>.
-         ;; '("<\\([[:alnum:]\\._-]+@[[:alnum:]\\._-]+\\)>" 1 comment success)
-         )
-        )
+         '("\\<https?://[^[:blank:]]*" 1 comment success)))
   :init
-  (add-hook 'ess-mode-hook (lambda () (hl-prog-extra-mode))))
+  (add-hook 'ess-mode-hook #'hl-prog-extra-mode))
 
-;;----------------------------------------------------------------------
+;; End of config.el ----------------------------------------------------

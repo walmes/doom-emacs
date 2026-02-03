@@ -1,71 +1,125 @@
 ;;----------------------------------------------------------------------
-;; Functions.
+;; 1. UI & Navigation
 ;;----------------------------------------------------------------------
-
-;;----------------------------------------------------------------------
-;; Split window and open shell.
 
 (defun open-shell-split-window ()
-  "Open shell and split window."
+  "Open shell in a split window."
   (interactive)
-  (split-window)
-  (shell)
-  (previous-buffer) ;; 1
-  (other-window 1)
-  (next-buffer)     ;; 2
-  (other-window 1))
+  (select-window (split-window-below))
+  (shell))
+
+(defvar wz-occur-saved-wconf nil
+  "Saved window configuration for `wz-occur`.")
+
+(defun wz-occur (&optional arg)
+  "Make sure to always put occur in a vertical split, into a
+   narrower buffer at the side."
+  (interactive "P")
+  ;; Store whatever frame configuration we are currently in.
+  (setq wz-occur-saved-wconf (current-window-configuration))
+  (occur (read-from-minibuffer "Regexp: "))
+  (if (wz-occur-check-existence)
+      (progn
+        (delete-other-windows)
+        (split-window-vertically)
+        (enlarge-window -10)))
+  (wz-occur-proceed-accordingly)
+  (next-error-follow-minor-mode))
+
+(defun wz-occur-proceed-accordingly ()
+  "Switch to occur buffer or prevent opening of the occur window
+   if no matches occurred."
+  (interactive "P")
+  (if (not (get-buffer "*Occur*"))
+      (message "There are no results.")
+    (switch-to-buffer "*Occur*")))
+
+(defun wz-occur-check-existence ()
+  "Signal the existence of an occur buffer."
+  (interactive)
+  (get-buffer "*Occur*"))
+
+(defun wz-occur-mode-quit ()
+  "Quit and close occur window, restoring previous window
+ configuration."
+  (interactive)
+  (when wz-occur-saved-wconf
+    (set-window-configuration wz-occur-saved-wconf)
+    (setq wz-occur-saved-wconf nil)))
+
+(defun lsp-treemacs-symbols-toggle ()
+  "Toggle the lsp-treemacs-symbols buffer."
+  (interactive)
+  (if (get-buffer "*LSP Symbols List*")
+      (kill-buffer "*LSP Symbols List*")
+    (progn (lsp-treemacs-symbols)
+           (other-window -1))))
+
+(defun lsp-ui-imenu-toggle ()
+  "Toggle the lsp-ui-imenu buffer."
+  (interactive)
+  (if (get-buffer "*lsp-ui-imenu*")
+      (kill-buffer "*lsp-ui-imenu*")
+    ;; (progn (lsp-ui-imenu)
+    ;;        (other-window -1))
+    (lsp-ui-imenu)
+    )
+  )
+
+(defun wz-disable-fly-modes ()
+  "Disable flymake and flycheck modes."
+  (interactive)
+  (when (bound-and-true-p flymake-mode)
+    (flymake-mode -1))
+  (when (bound-and-true-p flycheck-mode)
+    (flycheck-mode -1))
+  (message "Modes flymake and flycheck disabled."))
 
 ;;----------------------------------------------------------------------
-;; Duplicate lines (like in Geany).
-;; http://stackoverflow.com/questions/88399/how-do-i-duplicate-a-whole-line-in-emacs
+;; 2. General Editing
+;;----------------------------------------------------------------------
 
 (defun duplicate-line ()
+  "Duplicate the current line without affecting the kill-ring."
   (interactive)
-  (move-beginning-of-line 1)
-  (kill-line)
-  (yank)
-  (newline)
-  (yank))
-
-;;----------------------------------------------------------------------
-;; Cut and copy without selection.
-;; http://ergoemacs.org/emacs/emacs_copy_cut_current_line.html
+  (let ((line-text (buffer-substring (line-beginning-position)
+                                     (line-end-position))))
+    (save-excursion
+      (move-end-of-line 1)
+      (newline)
+      (insert line-text))
+    (forward-line 1)
+    (message "Line duplicated.")))
 
 (defun copy-line-or-region ()
   "Copy current line, or current text selection."
   (interactive)
-  (if (region-active-p)
-      (kill-ring-save
-       (region-beginning)
-       (region-end))
-    (kill-ring-save
-     (line-beginning-position)
-     (line-beginning-position 2))))
+  (if (use-region-p)
+      (progn
+        (kill-ring-save (region-beginning) (region-end))
+        (message "Copied region"))
+    (kill-ring-save (line-beginning-position)
+                    (line-beginning-position 2))
+    (message "Copied line")))
 
 (defun cut-line-or-region ()
   "Cut the current line, or current text selection."
   (interactive)
-  (if (region-active-p)
-      (kill-region
-       (region-beginning)
-       (region-end))
-    (kill-region
-     (line-beginning-position)
-     (line-beginning-position 2))))
-
-;;----------------------------------------------------------------------
-;; (un)Comment without selection.
+  (if (use-region-p)
+      (progn
+        (kill-region (region-beginning) (region-end))
+        (message "Cut region"))
+    (kill-region (line-beginning-position)
+                 (line-beginning-position 2))
+    (message "Cut line")))
 
 (defun comment-line-or-region ()
   "Comment or uncomment current line, or current text selection."
   (interactive)
-  (if (region-active-p)
-      (comment-or-uncomment-region
-       (region-beginning)
-       (region-end))
-    (comment-or-uncomment-region
-     (line-beginning-position)
-     (line-beginning-position 2))))
+  (if (use-region-p)
+      (comment-or-uncomment-region (region-beginning) (region-end))
+    (comment-or-uncomment-region (line-beginning-position)
+                                 (line-beginning-position 2))))
 
 ;;----------------------------------------------------------------------
 ;; Mark the word where the point is. -- Walmes Zeviani.
@@ -73,150 +127,139 @@
 (defun mark-whole-word ()
   "Mark the word where the point is."
   (interactive)
-  (skip-chars-backward "[[:alnum:]]._")
-  (set-mark (point))
-  (skip-chars-forward "[[:alnum:]]._"))
+  (let ((chars "[[:alnum:]]._"))
+    (skip-chars-backward chars)
+    (set-mark (point))
+    (skip-chars-forward chars)))
 
-;;----------------------------------------------------------------------
-;; Return the font face at point.
-;; http://stackoverflow.com/questions/1242352/get-font-face-under-cursor-in-emacs
-
-;; (defun what-face (pos)
-;;   (interactive "d")
-;;   (let ((face (or (get-char-property (point) 'read-face-name)
-;;                   (get-char-property (point) 'face))))
-;;     (if face (message "Face: %s" face) (message "No face at %d" pos))))
-
-;;----------------------------------------------------------------------
-;; Infill paragraph.
-;; http://www.emacswiki.org/emacs/UnfillParagraph
+(defun what-face (pos)
+  "Return the font face at point."
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
+                  (get-char-property (point) 'face))))
+    (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
 (defun unfill-paragraph ()
   "Takes a multi-line paragraph and makes it into a single line
    of text."
   (interactive)
-  (let ((fill-column (point-max)))
+  (let ((fill-column most-positive-fixnum))
     (fill-paragraph nil)))
 
-;; http://ergoemacs.org/emacs/emacs_unfill-paragraph.html
 (defun unfill-region (start end)
   "Replace newline chars in region by single spaces.
    This command does the inverse of `fill-region'."
   (interactive "r")
-  (let ((fill-column 90002000))
+  (let ((fill-column most-positive-fixnum))
     (fill-region start end)))
 
-;;----------------------------------------------------------------------
-;; Commented rules to divide code.
+(defun split-name (s)
+  "Split string `S` into a list of words based on camelCase or other
+delimiters."
+  (split-string
+   (let ((case-fold-search nil))
+     (downcase
+      (replace-regexp-in-string
+       "\\([a-z]\\)\\([A-Z]\\)" "\\1 \\2" s)))
+   "[^A-Za-z0-9]+"))
 
-;; t in line is empty (oly whitespaces), nil otherwise.
-;; https://lists.gnu.org/archive/html/help-gnu-emacs/2015-11/msg00212.html
+(defun camel-case (s)
+  "Convert string `S` to camelCase."
+  (concat (car (split-name s))
+          (mapconcat 'capitalize (cdr (split-name s)) "")))
+
+(defun dot-case (s)
+  "Convert string `S` to dot.case."
+  (mapconcat 'downcase (split-name s) "."))
+
+(defun snake-case (s)
+  "Convert string `S` to snake_case."
+  (mapconcat 'downcase (split-name s) "_"))
+
+(defun camel-dot-snake ()
+  "Cycle among camelCase, dot.case and snake_case in words.
+If the region is not active the current word at point is used."
+  (interactive)
+  (let ((is-region-active (and transient-mark-mode mark-active)))
+    (unless is-region-active
+      (let ((chars "[[:alnum:]]._"))
+        (skip-chars-backward chars)
+        (set-mark (point))
+        (skip-chars-forward chars)))
+    (let* ((beg (region-beginning))
+           (end (region-end))
+           (str (buffer-substring-no-properties beg end)))
+      (if (string-match-p "^[[:space:]]*$" str)
+          (message "Not a word at point")
+        (delete-region beg end)
+        (insert
+         (cond ((string-match-p "\\." str) (snake-case str))
+               ((string-match-p "_"   str) (camel-case str))
+               (t                          (dot-case   str))))
+        (when is-region-active
+          (setq deactivate-mark nil))))))
+
+(defun wz-indent-and-move-to-next-line ()
+  "Indent the current line and move cursor to the first printable
+   character in the next line."
+  (interactive)
+  (indent-for-tab-command)
+  (forward-line 1)
+  (back-to-indentation))
+
+;;----------------------------------------------------------------------
+;; 3. Code Structure & Formatting
+;;----------------------------------------------------------------------
+
 (defun blank-line-p ()
-  (string-match "^[[:space:]]*$"
-                (buffer-substring-no-properties
-                 (line-beginning-position)
-                 (line-end-position))))
+  "Return non-nil if current line is blank."
+  (save-excursion
+    (beginning-of-line)
+    (looking-at-p "^[[:space:]]*$")))
 
 (defun wz-insert-rule-from-point-to-margin (&optional char)
-  "Insert a commented rule with dashes (-) from the `point' to
-   the `fill-column' if the line has only spaces. If the line has
-   text, fill with dashes until the `fill-column'. Useful to
-   divide your code in sections. If a non nil optional argument is
-   passed, then it is used instead."
+  "Insert a commented rule from `point' to `fill-column'.
+If the line is blank, it starts a comment. Useful to divide code
+into sections."
   (interactive)
-  (if (blank-line-p)
-      (progn (insert "-")
-             (comment-line-or-region)
-             (delete-char -2))
-    nil)
-  (if char
-      (insert (make-string (- fill-column (current-column)) char))
-    (insert (make-string (- fill-column (current-column)) ?-)))
-  (beginning-of-line)
-  ;; Move the point to the fill-column position.
-  (forward-char fill-column)
-  ;; Delete what exceeds the fill-column.
-  (delete-region (point) (line-end-position))
-  )
+  (let ((char (or char ?-)))
+    (if (blank-line-p)
+        (progn
+          (indent-according-to-mode)
+          (insert comment-start)))
+    (let ((count (max 0 (- fill-column (current-column)))))
+      (insert (make-string count char)))
+    (beginning-of-line)
+    (forward-char fill-column)
+    (delete-region (point) (line-end-position))))
 
 (defun wz-insert-rule-and-comment-3 ()
-  "Insert a commented rule with 43 dashes (-). Useful to divide
-   your code in sections."
+  "Insert a commented rule with length relative to
+`fill-column' (62.5%)."
   (interactive)
   (if (blank-line-p)
-      (progn (insert "-")
-             (comment-line-or-region)
-             (delete-char -2))
-    nil)
-  (let ((column-middle (floor (* 0.625 fill-column))))
-    (if (< (current-column) column-middle)
-        (insert (make-string (- column-middle (current-column)) ?-)))))
-
-;;----------------------------------------------------------------------
-
-;; (defun replace-buffer-divisions-by-Walmes-style (beg end &optional char)
-;;   "This functions replace divisions in R code by Walmes's style
-;;    code division: start with single # and have 71 dashes, total
-;;    length is `fill-column'. All rules greater than 44 characters
-;;    will be replaced until complete margin."
-;;   (interactive "r")
-;;   (save-excursion
-;;     (goto-char beg)
-;;     (let ((comment-char
-;;            (if char
-;;                char
-;;              (read-from-minibuffer "Comment char: "))))
-;;       (while
-;;           ;; To have a prompt to pass the comment char.
-;;           (re-search-forward
-;;            (concat "^" comment-char ".-\\{43,\\}")
-;;            nil t)
-;;         (replace-match
-;;          (concat comment-char
-;;                  (make-string
-;;                   (- fill-column (string-width comment-char)) ?-))
-;;          nil nil)))))
-
-;; (defun wz-make-line-end-dashes-fill-column (beg end)
-;;   "This function fix those dashes at end of lines used as
-;;    decoration making them have a end at `fill-column'. At least
-;;    must have five dashes after a space, because 3 dashes are yaml
-;;    header and 4 are markdown horizontal rule."
-;;   (interactive "r")
-;;   (save-excursion
-;;     (goto-char beg)
-;;     (while (re-search-forward " -\\{5,\\}" end t)
-;;       (let ((xmax fill-column)
-;;             (xval (match-beginning 0) )
-;;             (null (beginning-of-line))
-;;             (xmin (point)))
-;;         (replace-match
-;;          (concat
-;;           " "
-;;           (make-string (- xmax (- xval xmin) 1) ?-)) nil nil)))))
-
-;;----------------------------------------------------------------------
-;; Header.
+      (progn
+        (indent-according-to-mode)
+        (insert comment-start)))
+  (let* ((column-middle (floor (* 0.625 fill-column)))
+         (count (max 0 (- column-middle (current-column)))))
+    (insert (make-string count ?-))))
 
 (defun wz-left-align-commented-text (text)
-    "Escreve o texto alinhado à esquerda e comenta a linha."
-    ;; (interactive)
-    (insert (concat "\n" text))
-    (comment-line-or-region))
-
-;; (wz-left-align-commented-text "Sample left aligned text.")
+  "Write TEXT aligned to the left and comment the line."
+  (insert "\n" text)
+  (comment-region (line-beginning-position) (point)))
 
 (defun wz-right-align-commented-text (text comment-char-size)
-  "Write text aligned to the right margin at `fill-column' and
-   comment it out."
-  (let ((number-of-spaces (- fill-column (length text)))
-        (string-length (length text)))
-    (insert (concat "\n" text))
-    (comment-line-or-region)
-    (backward-char string-length)
-    ;; (insert (make-string (- number-of-spaces comment-char-size) ? ))
-    (insert (make-string (- number-of-spaces 2) ? ))
-    (forward-char string-length)))
+  "Write TEXT aligned to the right margin at `fill-column' and
+comment it out."
+  (insert "\n" text)
+  (comment-region (line-beginning-position) (point))
+  (backward-char (length text))
+  (let ((spaces (- fill-column (length text) comment-char-size)))
+    (when (> spaces 0)
+      (insert (make-string spaces ?\s))))
+  (forward-char (length text)))
 
 (defun wz-header ()
   "Insert a header."
@@ -248,26 +291,26 @@
   (insert "\n")
   (wz-insert-rule-from-point-to-margin))
 
-;; Variáveis para o cabeçalho do projeto.
+;; Project header variables.
 (defvar-local wz-project-title nil
-    "Título do projeto para o cabeçalho.")
+    "Project title for the header.")
 (defvar-local wz-project-subtitle nil
-    "Subtítulo do projeto para o cabeçalho.")
+    "Project subtitle for the header.")
 (defvar-local wz-project-author-name "Prof. Dr. Walmes M. Zeviani"
-    "Nome do autor.")
+    "Author's name.")
 (defvar-local wz-project-author-affiliation nil
-    "Afiliação ou local de trabalho.")
+    "Author's affiliation or work location.")
 (defvar-local wz-project-author-email nil
-    "E-mail ou redes sociais.")
+    "Author's email or social networks.")
 (defvar-local wz-project-author-website nil
-    "Endereço do site ou repositório.")
+    "Author's website or repository.")
 (defvar-local wz-project-author-address nil
-    "Endereço geográfico.")
+    "Author's address.")
 (defvar-local wz-project-date nil
-    "Data do projeto.")
+    "Project date.")
 
-;; Definir as variáveis locais no arquivo `.dir-locals.el' seguindo esse
-;; esquema.
+;; Define the local variables in the `.dir-locals.el' file following this
+;; schema.
 ;;
 ;; ((nil . ((wz-project-title              . "Aplicações e Dashboards Avançado com R")
 ;;          (wz-project-subtitle           . "Usando Shiny & bslib")
@@ -277,17 +320,17 @@
 ;;          ;; (wz-project-author-address     . "Dourados, MS, Brasil")
 ;;          (wz-project-date               . "%Y-%b-%d · Dourados, MS, Brasil"))))
 
-;; Função para cabeçalho de projeto usando variáveis locais.
+;; Function to insert a header for a project using local variables.
 (defun wz-header-project ()
-    "Insere o cabeçalho do projeto usando variáveis locais."
+    "Insert a header for a project using local variables."
     (interactive)
     (let* ((char ?/)
            (comment-char-str (char-to-string char)))
-      ;; Insere a regra inicial com o caractere /.
+      ;; Insert the initial rule with the / character.
       (wz-insert-rule-from-point-to-margin char)
 
-      ;; Calcula o tamanho do prefixo de comentário no buffer atual.
-      ;; Isso é necessário para a função de alinhamento à direita.
+      ;; Calculate the size of the comment prefix in the current buffer.
+      ;; This is necessary for the right alignment function.
       (let ((comment-char-size
              (- (+ fill-column 2)
                 (how-many comment-char-str
@@ -295,16 +338,14 @@
                           (point)
                           t))))
 
-        ;; Título e Subtítulo (Alinhados à Esquerda).
+        ;; Title and subtitle left aligned.
         (when wz-project-title
           (wz-left-align-commented-text wz-project-title))
         (when wz-project-subtitle
           (wz-left-align-commented-text wz-project-subtitle))
         (wz-left-align-commented-text ".")
-        ;; dar backspace em um caracter.
         (delete-char -2)
-
-        ;; Informações do Autor (Alinhadas à Direita).
+        ;; Author's information right aligned.
         (when wz-project-author-name
           (wz-right-align-commented-text
            wz-project-author-name
@@ -332,86 +373,48 @@
             (wz-right-align-commented-text
              final-date comment-char-size)))
         )
-
-      ;; Fecha com a regra final.
       (insert "\n")
       (wz-insert-rule-from-point-to-margin char)))
 
-;;----------------------------------------------------------------------
-;; Code based on
-;; http://www.emacswiki.org/emacs/CamelCase.
-
-(defun split-name (s)
-  (split-string
-   (let ((case-fold-search nil))
-     (downcase
-      (replace-regexp-in-string
-       "\\([a-z]\\)\\([A-Z]\\)" "\\1 \\2" s)))
-   "[^A-Za-z0-9]+"))
-
-(defun camel-case (s)
-  (concat (car (split-name s))
-          (mapconcat 'capitalize (cdr (split-name s)) "")))
-(defun dot-case (s)
-  (mapconcat 'downcase (split-name s) "."))
-(defun snake-case (s)
-  (mapconcat 'downcase (split-name s) "_"))
-
-(defun camel-dot-snake ()
-  "Cycle among camelCase, dot.case and snake_case in words. If
-   the region is not active the current word at point is used."
-  (interactive)
-  (setq trs (and transient-mark-mode mark-active))
-  (unless trs
-    (skip-chars-backward "[[:alnum:]]._")
-    (set-mark (point))
-    (skip-chars-forward "[[:alnum:]]._"))
-  (let* ((beg (region-beginning))
-         (end (region-end))
-         (str (buffer-substring-no-properties beg end)))
-    (if (string-match "^\s*$" str)
-        (message "Not a word at point")
-      (delete-region beg end)
-      (insert
-       (cond ((string-match-p "\\." str) (snake-case str))
-             ((string-match-p "_"   str) (camel-case str))
-             (t                          (dot-case   str))))
-      (if trs (setq deactivate-mark nil)))))
-
-;; Another interesting implementation:
-;; https://www.bunkus.org/blog/2009/12/switching-identifier-naming
-;; -style-between-camel-case-and-c-style-in-emacs/
 
 ;;----------------------------------------------------------------------
-;; Functions related do Rmd files.
+;; 4. R / ESS / Polymode
+;;----------------------------------------------------------------------
 
-;; Insert a new (empty) chunk to R markdown.
+;; --- Polymode / Rmd ---
+
 (defun wz-insert-chunk ()
-  "Insert chunk environment Rmd sessions."
+  "Insert R code chunk environment for Rmd/Qmd sessions.
+Positions cursor between opening and closing delimiters for editing."
   (interactive)
-  (if (derived-mode-p 'ess-mode)
-      (insert "```\n\n```{r}\n")
-    (insert "```{r}\n\n```")
-    (forward-line -1)))
+  (let ((in-ess-mode (derived-mode-p 'ess-mode)))
+    (if in-ess-mode
+        ;; ESS mode: chunk above current position
+        (insert "```\n\n```{r}\n")
+      ;; Other modes: chunk at current position
+      (insert "```{r}\n\n```")))
+  ;; Position cursor in the blank line inside the chunk
+  (forward-line (if (derived-mode-p 'ess-mode) -2 -1))
+  (end-of-line))
 
-;; Goes to next chunk.
 (defun wz-polymode-next-chunk ()
-  "Go to next chunk. This function is not general because is
-   assumes all chunks are of R language."
+  "Move to the first line after the next code chunk header.
+Searches forward for the next chunk opening (```{...})."
   (interactive)
-  (search-forward-regexp "^```{.*}$" nil t)
-  (forward-line 1))
+  (if (search-forward-regexp "^```{.*}$" nil t)
+      (forward-line 1)
+    (message "No more chunks found")))
 
-;; Goes to previous chunk.
 (defun wz-polymode-previous-chunk ()
-  "Go to previous chunk. This function is not general because is
-   assumes all chunks are of R language."
+  "Move to the first line after the previous code chunk header.
+Searches backward for the previous chunk opening (```{...})."
   (interactive)
-  (search-backward-regexp "^```$" nil t)
-  (search-backward-regexp "^```{.*}$" nil t)
-  (forward-line 1))
+  (if (search-backward-regexp "^```$" nil t)
+      (if (search-backward-regexp "^```{.*}$" nil t)
+          (forward-line 1)
+        (message "No previous chunks found"))
+    (message "No previous chunks found")))
 
-;; Evals current R chunk.
 (defun wz-polymode-eval-R-chunk ()
   "Evals all code in R chunks in a polymode document (Rmd files)."
   (interactive)
@@ -429,7 +432,6 @@
         (goto-char ptn))
     (message "ess-mode weren't detected.")))
 
-;; Evals R chunk and goes to next chunk.
 (defun wz-polymode-eval-R-chunk-and-next ()
   "Evals a R chunk and move point to next chunk."
   (interactive)
@@ -478,54 +480,29 @@
     ;; If the region is not activated.
     (message "Region must be activated.")))
 
-;;----------------------------------------------------------------------
-
-;; ;; Based on:
-;; ;; http://stackoverflow.com/questions/4697322/elisp-call-command-on-current-file
-;; (defun wz-ess-rmarkdown-render ()
-;;   "Run rmarkdown::render() in the buffer. Tested only in Rmd files."
-;;   (interactive)
-;;   (shell-command
-;;    (format "Rscript -e 'library(rmarkdown); render(\"%s\")'"
-;;            (shell-quote-argument (buffer-file-name))))
-;;   (revert-buffer t t t))
-
-;; ;; Mark a word at a point.
-;; ;; http://www.emacswiki.org/emacs/ess-edit.el
-;; (defun ess-edit-word-at-point ()
-;;   (save-excursion
-;;     (buffer-substring
-;;      (+ (point) (skip-chars-backward "a-zA-Z0-9._"))
-;;      (+ (point) (skip-chars-forward "a-zA-Z0-9._")))))
-
-;; ;; Eval any word where the cursor is (objects, functions, etc).
-;; (defun ess-eval-word ()
-;;   (interactive)
-;;   (let ((x (ess-edit-word-at-point)))
-;;     (ess-eval-linewise (concat x))))
+;; --- ESS / R Editing ---
 
 (defun wz-ess-forward-R-assigment-symbol ()
-  "Move cursor to the next occurrence of 「<-」 「=」. Adapted from:
+  "Move cursor to the next occurrence of 「<-」 or single 「=」.
+   Excludes 「==」 and 「!=」. Adapted from:
    URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'."
   (interactive)
-  (search-forward-regexp "=+\\|<-" nil t))
+  (search-forward-regexp "<-\\|[^!=]=[^=]" nil t))
 
 (defun wz-ess-backward-R-assigment-symbol ()
-  "Move cursor to the previous occurrence of 「<-」 「=」. Adapted from:
+  "Move cursor to the previous occurrence of 「<-」 or single 「=」.
+   Excludes 「==」 and 「!=」. Adapted from:
    `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'."
   (interactive)
-  (search-backward-regexp "=+\\|<-" nil t))
+  (search-backward-regexp "<-\\|[^!=]=[^=]" nil t))
 
 (defun wz-ess-align-R-assigment-operators ()
-  "Função que alinha a região com a primeira ocorrência de sinais
-   ` <- ' e ` = '. Baseado em:
-   http://stackoverflow.com/questions/13315064/
-   marker-does-not-point-anywhere-from-align-regexp-emacs"
+  "Align assignment operators (<- or =) in the active region."
   (interactive)
   (save-excursion
     (align-regexp
      (region-beginning) (region-end)
-     "\\(\\s-*\\) *\\(<-\\|=\\) *" 1 1 nil)))
+     "\\(\\s-*\\) *\\(<-\\|[^!=]=[^=]\\) *" 1 1 nil)))
 
 (defun wz-ess-backward-break-line-here ()
   "Searches a point backward where a break there is allowed."
@@ -606,12 +583,91 @@
                (setq done t)))))
     (unhighlight-regexp rgxp)))
 
+(defun wz-align-by-separator (beg end separator)
+  "Align the selected region using SEPARATOR.
+Ensures all lines (except the last) end with the separator and preserves
+the original block indentation.
+Before:
+  ~mpg, ~cyl, ~disp,
+  21,6,160,
+  21,6,160
+After:
+  ~mpg, ~cyl, ~disp,
+    21,    6,   160,
+    21,    6,   160"
+  (interactive "r\nsSeparator (e.g., ,): ")
+  (let ((sep (if (string-equal separator "") "," separator))
+        ;; Capture the indentation of the first line to replicate in the block.
+        (indent (save-excursion
+                  (goto-char beg)
+                  (current-indentation))))
+    (save-excursion
+      (save-restriction
+        ;; Narrow the region to avoid side effects in the file.
+        (narrow-to-region beg end)
+
+        ;; 1. Preparation: transform separators into temporary pipes.
+        (goto-char (point-min))
+        (while (re-search-forward (regexp-quote sep) nil t)
+          (replace-match " | "))
+
+        ;; 2. Normalization: create the Org table structure.
+        (goto-char (point-min))
+        (while (not (eobp))
+          (beginning-of-line)
+          (delete-horizontal-space)
+          (insert "| ")
+          (end-of-line)
+          ;; Ensure each line ends with a pipe for Org.
+          (unless (looking-back "| " 2) (insert " |"))
+          (forward-line 1))
+
+        ;; 3. Alignment: Org's engine does the heavy lifting.
+        (require 'org-table)
+        (org-table-align)
+
+        ;; 4. Reversion: remove pipes and apply the separator logic.
+        (goto-char (point-min))
+        (let ((last-line-pos (save-excursion
+                               (goto-char (point-max))
+                               (forward-line 0)
+                               (point))))
+          (while (not (eobp))
+            (let ((is-last (= (line-beginning-position) last-line-pos)))
+              ;; Remove the opening pipe of the table.
+              (beginning-of-line)
+              (when (looking-at "| ") (delete-char 2))
+
+              ;; Handle the closing pipe (the secret for the final comma).
+              (end-of-line)
+              (when (re-search-backward " |$" (line-beginning-position) t)
+                (if is-last
+                    (replace-match "")      ; Last line: clean.
+                  (replace-match sep)))    ; Others: add the separator.
+
+              ;; Convert internal pipes back to the separator.
+              (goto-char (line-beginning-position))
+              (while (re-search-forward " | " (line-end-position) t)
+                (replace-match (concat sep " ")))
+
+              ;; Restore the original indentation captured at the start.
+              (beginning-of-line)
+              (indent-to indent)
+              (forward-line 1))))
+
+        ;; Cleanup of unnecessary trailing spaces.
+        (delete-trailing-whitespace)
+        (goto-char (point-max))
+        (delete-char -2)))))
+
+
 ;;----------------------------------------------------------------------
 ;; Function based in the bm-bookmark-regexp-region.
 ;; This function bookmark all chunks in *.Rnw and *.Rmd buffers.
 
 (defun wz-bm-bookmark-chunk-in-buffer ()
-  "Set bookmark on chunk header lines in Rnw and Rmd files."
+  "Set bookmark on the first line inside each chunk in Rnw and Rmd files.
+Bookmarks are placed just after the chunk header, inside the code block."
   (interactive)
   (let ((regexp "^<<.*>>=$\\|^```{.*}$")
         (annotation nil)
@@ -624,6 +680,7 @@
       (goto-char (point-min))
       (while (and (< (point) (point-max))
                   (re-search-forward regexp (point-max) t))
+        (forward-line 1) ; move to the first line inside the chunk
         (bm-bookmark-add annotation)
         (setq count (1+ count))
         (forward-line 1)))
@@ -653,7 +710,7 @@
      (format
       "local({
           formatR::tidy_source(text = \"\n%s\",
-                               arrow = TRUE, width.cutoff = 60) })\n"
+                                arrow = TRUE, width.cutoff = 60) })\n"
       string) buf)
     (with-current-buffer buf
       (goto-char (point-max))
@@ -681,7 +738,7 @@
      (format
       "local({
           cat(stringi::stri_escape_unicode(\"%s\"),
-             \"\\n\") })\n"
+              \"\\n\") })\n"
       string) buf)
     (with-current-buffer buf
       (goto-char (point-max))
@@ -778,7 +835,7 @@
     (goto-char end)))
 
 (defun wz-ess-open-html-documentation (beg end)
-  "TODO. By Walmes Zeviani."
+  "Open HTML documentation for the object at point in R."
   (interactive "r")
   (let ((string
          (replace-regexp-in-string
@@ -804,7 +861,7 @@
   )
 
 (defun wz-ess-newline-indented ()
-  "Executa ess-roxy-newline e ess-indent-or-complete."
+  "Execute `ess-roxy-newline` and `ess-indent-or-complete`."
   (interactive)
   (ess-roxy-newline)
   (ess-indent-or-complete))
@@ -841,148 +898,13 @@
   (comint-interrupt-subjob)
   (ess-switch-to-inferior-or-script-buffer t))
 
-(eval-after-load 'ess-mode
-  '(define-key ess-mode-map (kbd "C-<escape>") 'wz-ess-cancel-on-inferior-ess-buffer))
-
-(defun my-occur (&optional arg)
-  "Make sure to always put occur in a vertical split, into a
-   narrower buffer at the side. I didn't like the default
-   horizontal split, nor the way it messes up the arrangement of
-   windows in the frame or the way in which the standard way uses
-   a neighbor window."
-  (interactive "P")
-  ;; store whatever frame configuration we are currently in
-  (window-configuration-to-register ?y)
-  (occur (read-from-minibuffer "Regexp: "))
-  (if (occur-check-existence)
-      (progn
-        (delete-other-windows)
-        ;; (split-window-horizontally)
-        ;; (enlarge-window-horizontally -30)
-        (split-window-vertically)
-        (enlarge-window -10)
-        ;; (set-cursor-color "green")
-        )
-    )
-  (occur-procede-accordingly)
-  (next-error-follow-minor-mode) ;;+
-  )
-
-(defun occur-procede-accordingly ()
-  "Switch to occur buffer or prevent opening of the occur window
-   if no matches occurred."
-  (interactive "P")
-  (if (not(get-buffer "*Occur*"))
-      (message "There are no results.")
-    (switch-to-buffer "*Occur*")))
-
-(defun occur-check-existence()
-  "Signal the existence of an occur buffer depending on the
-   number of matches."
-  (interactive)
-  (if (not(get-buffer "*Occur*")) nil t))
-
-;; http://www.emacswiki.org/emacs/OccurMode
-;; To show more context lines, use
-;; C-U 5 M-x occur regexp-to-search
-
-(defun occur-mode-quit ()
-  "Quit and close occur window. I want to press 'q' and leave
-   things as they were before in regard of the split of windows
-   in the frame. This is the equivalent of pressing C-x 0 and
-   reset windows in the frame, in whatever way they were, plus
-   jumping to the latest position of the cursor which might have
-   been changed by using the links out of any of the matches
-   found in occur."
-  (interactive)
-  (switch-to-buffer "*Occur*")
-  ;; in order to know where we put the cursor they might have jumped from occur
-  (other-window 1)                  ;; go to the main window
-  (point-to-register ?1)            ;; store the latest cursor position
-  (switch-to-buffer "*Occur*")      ;; go back to the occur window
-  (kill-buffer "*Occur*")           ;; delete it
-  (jump-to-register ?y)             ;; reset the original frame state
-  ;; (set-cursor-color "rgb:ff/fb/53") ;; reset cursor color
-  (register-to-point ?1))           ;; re-position cursor
-
-;; Some key bindings defined below. Use "p" ans "n" as in dired mode
-;; (without Cntrl key) for previous and next line; just show occurrence
-;; without leaving the "occur" buffer; use RET to display the line of
-;; the given occurrence, instead of jumping to i,t which you do clicking
-;; instead; also quit mode with Ctrl-g.
-
 ;;----------------------------------------------------------------------
-;; Based on https://github.com/emacs-lsp/lsp-treemacs/issues/35.
-;; Requieres lsp-treemacs: https://github.com/emacs-lsp/lsp-treemacs
-
-(defun lsp-treemacs-symbols-toggle ()
-  "Toggle the lsp-treemacs-symbols buffer."
-  (interactive)
-  (if (get-buffer "*LSP Symbols List*")
-      (kill-buffer "*LSP Symbols List*")
-    (progn (lsp-treemacs-symbols)
-           (other-window -1))))
-
-(defun lsp-ui-imenu-toggle ()
-  "Toggle the lsp-ui-imenu buffer."
-  (interactive)
-  (if (get-buffer "*lsp-ui-imenu*")
-      (kill-buffer "*lsp-ui-imenu*")
-    ;; (progn (lsp-ui-imenu)
-    ;;        (other-window -1))
-    (lsp-ui-imenu)
-    )
-  )
-
-;;----------------------------------------------------------------------
-
-(defun wz-disable-fly-modes ()
-  "Disable flymake and flycheck modes."
-  (interactive)
-  (when flymake-mode
-    (flymake-mode -1))
-  (when flycheck-mode
-    (flycheck-mode -1))
-  (message "Modes flymake and flycheck disabled."))
-
-(defun wz-indent-and-move-to-next-line ()
-  "Indent the current line and move cursor to the first printable
-   character in the next line."
-  (interactive)
-  (indent-for-tab-command)
-  (next-line)
-  (skip-chars-forward " \t"))
-
-;;----------------------------------------------------------------------
-;; To solve problem with font-face.
-
-;; (defun wz-ess-insert-thing-and-press-enter ()
-;;   "Insert 'hello world' in the *R* buffer and press Enter."
-;;   (interactive)
-;;   (with-current-buffer "*R*"
-;;     (insert "")
-;;     (inferior-ess-send-input)
-;;     )
-;;   )
-
-;; (defun wz-ess-insert-thing-and-press-enter ()
-;;   "Fix problem with font face. Solution based on: https://github.com/emacs-ess/ESS/issues/1193"
-;;   (interactive)
-;;   (with-current-buffer "*R*"
-;;     (insert "invisible(addTaskCallback(function(...) { if (interactive()) { try(cat(crayon::reset('')), silent = TRUE) } else { TRUE }}, name = 'ansi_reset'))")
-;;     (inferior-ess-send-input)
-;;     )
-;;   )
-
-;; ;; Bind a key to the function (optional)
-;; (global-set-key (kbd "C-<dead-circumflex>")
-;;                 'wz-ess-insert-thing-and-press-enter)
-
+;; 5. Keybindings
 ;;----------------------------------------------------------------------
 
 (define-key global-map "\M-Q" 'unfill-region)
-(define-key global-map (kbd "C-S-o") 'my-occur)
-(define-key occur-mode-map (kbd "q") 'occur-mode-quit)
+(define-key global-map (kbd "C-S-o") 'wz-occur)
+(define-key occur-mode-map (kbd "q") 'wz-occur-mode-quit)
 
 (global-set-key (kbd "S-<delete>") 'cut-line-or-region)  ; cut.
 (global-set-key (kbd "C-<insert>") 'copy-line-or-region) ; copy.
@@ -1011,6 +933,10 @@
                 (lambda ()
                   (interactive)
                   (wz-insert-rule-from-point-to-margin ?─)))
+
+;; ESS / R Mode Bindings
+(eval-after-load 'ess-mode
+  '(define-key ess-mode-map (kbd "C-<escape>") 'wz-ess-cancel-on-inferior-ess-buffer))
 
 (add-hook
  'markdown-mode-hook

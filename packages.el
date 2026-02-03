@@ -120,13 +120,13 @@
 
 ;;--- Python -----------------------------------------------------------
 
-;; Elpy - Emacs Python Development Environment.
-;; https://elpy.readthedocs.io/en/latest/
-(package! elpy)
-
-;; Microsoft Python Language Server
-;; (disabled by default, using Pyright/Jedi usually).
-(package! lsp-python-ms :disable t)
+;; ;; Elpy - Emacs Python Development Environment.
+;; ;; https://elpy.readthedocs.io/en/latest/
+;; (package! elpy)
+;;
+;; ;; Microsoft Python Language Server
+;; ;; (disabled by default, using Pyright/Jedi usually).
+;; (package! lsp-python-ms :disable t)
 
 ;;--- Stan -------------------------------------------------------------
 
@@ -162,9 +162,9 @@
 
 ;; Codeium - Free AI code completion.
 ;; https://github.com/Exafunction/codeium.el
-(package! codeium
-  :recipe (:host github
-           :repo "Exafunction/codeium.el"))
+;; (package! codeium
+;;   :recipe (:host github
+;;            :repo "Exafunction/codeium.el"))
 
 ;; Obsolete / Unused AI packages
 ;; (package! chatgpt :recipe (:host github :repo "emacs-openai/chatgpt"))
