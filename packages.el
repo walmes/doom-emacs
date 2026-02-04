@@ -19,10 +19,13 @@
 
 ;; Icons for Dired, Treemacs, and Mode-line.
 ;; https://github.com/domtronn/all-the-icons.el
+;; TODO: M-x all-the-icons-install-fonts
 (package! all-the-icons)
 
 ;; Nerd Font icons (alternative/complement to all-the-icons).
 ;; https://github.com/rainstormstudio/nerd-icons.el
+;; https://www.nerdfonts.com/#home
+;; TODO: M-x nerd-icons-install-fonts
 (package! nerd-icons)
 
 ;; Nerd icons theme for Treemacs.
@@ -35,6 +38,7 @@
   :recipe (:host github :repo "wyuenho/all-the-icons-dired"))
 
 ;; Perfect Margin for centering windows.
+;; https://github.com/mpwang/perfect-margin
 (package! perfect-margin)
 
 ;; Improved highlighting for programming modes.
@@ -57,7 +61,8 @@
 ;; Bookmark+ for advanced bookmark management.
 ;; https://github.com/emacsmirror/bookmark-plus
 (package! bookmark+
-  :recipe (:host github :repo "emacsmirror/bookmark-plus"))
+  :recipe (:host github
+           :repo "emacsmirror/bookmark-plus"))
 
 ;; Code folding based on indentation.
 ;; https://github.com/zenozeng/yafolding.el
@@ -70,7 +75,8 @@
 ;; Code screenshots.
 ;; https://github.com/tecosaur/screenshot
 (package! screenshot
-  :recipe (:host github :repo "tecosaur/screenshot"
+  :recipe (:host github
+           :repo "tecosaur/screenshot"
            :build (:not compile))) ;; Workaround for build issue.
 
 
@@ -88,10 +94,36 @@
 ;;----------------------------------------------------------------------
 
 ;;--- R / ESS ----------------------------------------------------------
+;; Most configured with `(ess +lsp)' in init.el.
 
 ;; View and manipulate data in ESS/R (tidyverse-like).
 ;; https://github.com/ShuguangSun/ess-view-data
 (package! ess-view-data)
+
+;; Electric Spacing for R - Smart operator spacing.
+(package! electric-spacing-r
+  :recipe (:host github
+           :repo "walmes/electric-spacing"
+           :files ("electric-spacing-r.el")))
+
+;;--- Rmarkdown/Quarto -------------------------------------------------
+
+;; ;; Polymode stack for RMarkdown/Noweb.
+;; ;; https://polymode.github.io/
+;; ;; https://github.com/polymode/poly-R
+;; (package! poly-noweb)
+;; (package! poly-markdown)
+;; ;; (package! poly-R)
+
+;; Quarto mode for editing Quarto documents.
+;; https://github.com/quarto-dev/quarto-emacs
+(package! quarto-mode)
+
+;; Orgalist - Org-like lists in other modes.
+;; https://elpa.gnu.org/packages/orgalist.html
+(package! orgalist)
+
+;;--- ESS Shell --------------------------------------------------------
 
 ;; ESS Shell - Interact with shell from ESS.
 ;; Repo missing, so we download manually as requested.
@@ -104,29 +136,8 @@
     :recipe (:local-repo "~/.doom.d"
              :files ("essh.el"))))
 
-;; Electric Spacing for R - Smart operator spacing.
-(package! electric-spacing-r
-  :recipe (:host github
-           :repo "walmes/electric-spacing"
-           :files ("electric-spacing-r.el")))
-
-;; Polymode stack for RMarkdown/Noweb.
-(package! poly-noweb)
-(package! poly-markdown)
-(package! quarto-mode)
-
-;; Orgalist - Org-like lists in other modes.
-(package! orgalist)
-
 ;;--- Python -----------------------------------------------------------
-
-;; ;; Elpy - Emacs Python Development Environment.
-;; ;; https://elpy.readthedocs.io/en/latest/
-;; (package! elpy)
-;;
-;; ;; Microsoft Python Language Server
-;; ;; (disabled by default, using Pyright/Jedi usually).
-;; (package! lsp-python-ms :disable t)
+;; All configured via Doom's built-in python layer.
 
 ;;--- Stan -------------------------------------------------------------
 
@@ -142,7 +153,8 @@
 ;; Minimalist presentation tool for Org-mode.
 ;; https://github.com/rlister/org-present
 (package! org-present
-  :recipe (:host github :repo "rlister/org-present"))
+  :recipe (:host github
+           :repo "rlister/org-present"))
 
 
 ;;----------------------------------------------------------------------
@@ -158,7 +170,8 @@
 
 ;; GPTel - Interaction with LLMs (ChatGPT, Gemini, etc.).
 ;; https://github.com/karthink/gptel
-(package! gptel :recipe (:nonrecursive t))
+(package! gptel
+  :recipe (:nonrecursive t))
 
 ;; Codeium - Free AI code completion.
 ;; https://github.com/Exafunction/codeium.el

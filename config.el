@@ -83,16 +83,50 @@
       comment-empty-lines t     ; Apply comments to empty lines.
       select-enable-clipboard t ; Integrate with system clipboard.
       tab-always-indent t)
-(setq-default indent-tabs-mode nil
-              fill-column 72)
+(setq-default indent-tabs-mode nil)
+(setq-default fill-column 72)
 
-;; Whitespace handling
-(global-whitespace-mode t)
+;; Global Whitespace Management
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-(setq whitespace-line-column fill-column
-      whitespace-style '(face lines-tail trailing tabs empty))
+(setq whitespace-style '(face trailing tabs empty))
+(global-whitespace-mode t)
 
-;;----------------------------------------------------------------------
+(custom-set-faces!
+  '(fill-column-indicator
+    :foreground "#3f444a"
+    :background nil
+    :weight light)
+  '(whitespace-line
+    :background nil
+    :foreground "#f0c674"
+    :weight normal))
+
+;; Whitespace Configuration for Programming & Config Modes
+(setq-hook! '(prog-mode-hook conf-mode-hook)
+  display-fill-column-indicator-column fill-column
+  whitespace-line-column fill-column
+  whitespace-style '(face lines-tail trailing tabs empty)
+  ;; whitespace-style '(face trailing tabs empty)
+  )
+
+;; Whitespace Configuration for Data & Config Files
+(setq-hook! '(json-mode-hook
+              csv-mode-hook
+              yaml-mode-hook
+              toml-mode-hook
+              dcf-mode-hook
+              bibtex-mode-hook
+              latex-mode-hook
+              TeX-mode-hook
+              plain-TeX-mode-hook)
+    whitespace-style '(face trailing tabs empty))
+
+;; `C-c t c' to toggle fill-column-indicator mode.
+(add-hook! '(prog-mode-hook conf-mode-hook)
+           #'display-fill-column-indicator-mode
+           #'rainbow-mode)
+
+;----------------------------------------------------------------------
 ;; 4. Global Keybindings
 ;;----------------------------------------------------------------------
 ;; Using Doom's `map!` macro for cleaner key definitions.
@@ -282,46 +316,65 @@
   (after! minimap
     (setq minimap-width-fraction 0.08)))
 
-;;--- Shell Output Coloring --------------------------------------------
+;;--- Xterm Color Support (R, Python, Shell) -------------------------
 (use-package! xterm-color
-  :init
-  (setq comint-output-filter-functions
-        (remove 'ansi-color-process-output
-                comint-output-filter-functions))
-  (add-hook 'inferior-ess-mode-hook
-            (lambda ()
-              (add-hook 'comint-preoutput-filter-functions
-                        #'xterm-color-filter nil t)))
-  :config
-  (setq xterm-color-use-bold t))
+    :config
+    (setq xterm-color-use-bold t))
+
+(after! comint
+    ;; Remove the native filter to avoid processing conflicts.
+    (setq comint-output-filter-functions
+          (remove 'ansi-color-process-output
+                  comint-output-filter-functions))
+    ;; Apply the xterm-color filter to all comint buffers.
+    (add-hook 'comint-mode-hook
+              (lambda ()
+                  ;; Add the filter locally to the buffer.
+                  (add-hook 'comint-preoutput-filter-functions
+                            #'xterm-color-filter
+                            nil
+                            t)))
+    ;; Ensure processes know that Emacs accepts 256 colors.
+    (setenv "TERM" "xterm-256color"))
 
 ;;--- Markdown ---------------------------------------------------------
 (use-package! markdown-mode
   :config
   (require 'orgalist)
   (orgalist-mode t)
-  (map! :map markdown-mode-map "C-c *" #'orgalist-cycle-bullet)
   (add-hook 'markdown-mode-hook #'imenu-add-menubar-index)
-  (map! :map markdown-mode-map "<f10>" #'imenu-list-smart-toggle))
+  ;; Key Mapping.
+  (map! :map markdown-mode-map
+        "C-c *" #'orgalist-cycle-bullet
+        "<f10>" #'imenu-list-smart-toggle))
 
 ;;--- ESSH (Emacs Speaks Statistics Shell) -----------------------------
 (use-package! essh
   :config
+  ;; 1. "Smart" function for Ctrl + Enter
+  (defun wz-sh-send-line-or-region-and-step ()
+    "If there is an active region, send it to the shell. Otherwise, send the line and step."
+    (interactive)
+    (if (use-region-p)
+        (progn
+          (pipe-region-to-shell)
+          (deactivate-mark))
+      (pipe-line-to-shell-and-step)))
+  ;; 2. Key Mapping
+  (after! sh-script
+    (map! :map sh-mode-map
+          "C-<return>"  #'wz-sh-send-line-or-region-and-step
+          "C-c C-r"     #'pipe-region-to-shell
+          "C-c C-b"     #'pipe-buffer-to-shell
+          "C-c C-j"     #'pipe-line-to-shell
+          "C-c C-n"     #'pipe-line-to-shell-and-step
+          "C-c C-f"     #'pipe-function-to-shell
+          "C-c C-d"     #'shell-cd-current-directory))
+  ;; 3. Imenu Configuration (Code Sections)
   (add-hook! 'sh-mode-hook
-    (lambda ()
-      (map! :map sh-mode-map
-            "C-c C-r" #'pipe-region-to-shell
-            "C-c C-b" #'pipe-buffer-to-shell
-            "C-c C-j" #'pipe-line-to-shell
-            "C-c C-n" #'pipe-line-to-shell-and-step
-            "C-c C-f" #'pipe-function-to-shell
-            "C-c C-d" #'shell-cd-current-directory)))
-  ;; Imenu setup
-  (add-hook! 'sh-mode-hook
-             (lambda ()
-               (setq imenu-generic-expression
-                     (append '(("Blocks" "^# \\(.\\{1,15\\}\\)[^-]* ---+$" 1))
-                             (nthcdr 1 (car sh-imenu-generic-expression)))))))
+    (setq imenu-generic-expression
+          (append '(("Blocks" "^#-\\{0,4\\} \\(.\\{1,15\\}\\)[^-]* ---+$" 1))
+                  (nthcdr 1 (car sh-imenu-generic-expression))))))
 
 ;;--- Hi-Lock ----------------------------------------------------------
 (use-package! hi-lock)
@@ -455,6 +508,12 @@
   (add-hook 'ess-mode-hook #'electric-spacing-mode)
   (add-hook 'python-mode-hook #'electric-spacing-mode))
 
+;;--- Polymode/Quarto --------------------------------------------------
+
+;; Fix for the weirdness of polymode and lsp. See for more info:
+;; https://github.com/polymode/poly-R/issues/34
+(setq polymode-lsp-integration nil)
+
 ;;--- Quarto -----------------------------------------------------------
 (use-package! quarto-mode)
 
@@ -555,7 +614,6 @@
   :config
   ;; Activate environment automatically if there's an environment.yml in the project.
   (conda-env-autoactivate-mode t)
-
   ;; Critical Synchronization: When switching Conda environments, the LSP
   ;; and Python Interpreter must update.
   (add-hook 'conda-postactivate-hook
