@@ -2,7 +2,7 @@
 ;; 1. UI & Navigation
 ;;----------------------------------------------------------------------
 
-(defun open-shell-split-window ()
+(defun wz-open-shell-split-window ()
   "Open shell in a split window."
   (interactive)
   (select-window (split-window-below))
@@ -12,8 +12,8 @@
   "Saved window configuration for `wz-occur`.")
 
 (defun wz-occur (&optional arg)
-  "Make sure to always put occur in a vertical split, into a
-   narrower buffer at the side."
+  "Make sure to always put occur in a vertical split, into a narrower
+   buffer at the side."
   (interactive "P")
   ;; Store whatever frame configuration we are currently in.
   (setq wz-occur-saved-wconf (current-window-configuration))
@@ -27,8 +27,8 @@
   (next-error-follow-minor-mode))
 
 (defun wz-occur-proceed-accordingly ()
-  "Switch to occur buffer or prevent opening of the occur window
-   if no matches occurred."
+  "Switch to occur buffer or prevent opening of the occur window if no
+   matches occurred."
   (interactive "P")
   (if (not (get-buffer "*Occur*"))
       (message "There are no results.")
@@ -41,30 +41,11 @@
 
 (defun wz-occur-mode-quit ()
   "Quit and close occur window, restoring previous window
- configuration."
+   configuration."
   (interactive)
   (when wz-occur-saved-wconf
     (set-window-configuration wz-occur-saved-wconf)
     (setq wz-occur-saved-wconf nil)))
-
-(defun lsp-treemacs-symbols-toggle ()
-  "Toggle the lsp-treemacs-symbols buffer."
-  (interactive)
-  (if (get-buffer "*LSP Symbols List*")
-      (kill-buffer "*LSP Symbols List*")
-    (progn (lsp-treemacs-symbols)
-           (other-window -1))))
-
-(defun lsp-ui-imenu-toggle ()
-  "Toggle the lsp-ui-imenu buffer."
-  (interactive)
-  (if (get-buffer "*lsp-ui-imenu*")
-      (kill-buffer "*lsp-ui-imenu*")
-    ;; (progn (lsp-ui-imenu)
-    ;;        (other-window -1))
-    (lsp-ui-imenu)
-    )
-  )
 
 (defun wz-disable-fly-modes ()
   "Disable flymake and flycheck modes."
@@ -75,11 +56,12 @@
     (flycheck-mode -1))
   (message "Modes flymake and flycheck disabled."))
 
+
 ;;----------------------------------------------------------------------
 ;; 2. General Editing
 ;;----------------------------------------------------------------------
 
-(defun duplicate-line ()
+(defun wz-duplicate-line ()
   "Duplicate the current line without affecting the kill-ring."
   (interactive)
   (let ((line-text (buffer-substring (line-beginning-position)
@@ -91,7 +73,7 @@
     (forward-line 1)
     (message "Line duplicated.")))
 
-(defun copy-line-or-region ()
+(defun wz-copy-line-or-region ()
   "Copy current line, or current text selection."
   (interactive)
   (if (use-region-p)
@@ -100,9 +82,9 @@
         (message "Copied region"))
     (kill-ring-save (line-beginning-position)
                     (line-beginning-position 2))
-    (message "Copied line")))
+    (message "Copied line.")))
 
-(defun cut-line-or-region ()
+(defun wz-cut-line-or-region ()
   "Cut the current line, or current text selection."
   (interactive)
   (if (use-region-p)
@@ -111,9 +93,9 @@
         (message "Cut region"))
     (kill-region (line-beginning-position)
                  (line-beginning-position 2))
-    (message "Cut line")))
+    (message "Cut line.")))
 
-(defun comment-line-or-region ()
+(defun wz-comment-line-or-region ()
   "Comment or uncomment current line, or current text selection."
   (interactive)
   (if (use-region-p)
@@ -121,41 +103,41 @@
     (comment-or-uncomment-region (line-beginning-position)
                                  (line-beginning-position 2))))
 
-;;----------------------------------------------------------------------
-;; Mark the word where the point is. -- Walmes Zeviani.
+(defun wz-mark-whole-word ()
+  "Mark the symbol under the cursor (including . and _). The selection
+   disappears automatically when the cursor moves."
+    (interactive)
+    (let ((bounds (bounds-of-thing-at-point 'symbol)))
+        (when bounds
+            (goto-char (cdr bounds))
+            (push-mark (car bounds) t t)
+            ;; Flash the selected region briefly.
+            (pulse-momentary-highlight-region (car bounds) (cdr bounds)))))
 
-(defun mark-whole-word ()
-  "Mark the word where the point is."
-  (interactive)
-  (let ((chars "[[:alnum:]]._"))
-    (skip-chars-backward chars)
-    (set-mark (point))
-    (skip-chars-forward chars)))
-
-(defun what-face (pos)
+(defun wz-what-face (pos)
   "Return the font face at point."
   (interactive "d")
   (let ((face (or (get-char-property (point) 'read-face-name)
                   (get-char-property (point) 'face))))
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
-(defun unfill-paragraph ()
+(defun wz-unfill-paragraph ()
   "Takes a multi-line paragraph and makes it into a single line
    of text."
   (interactive)
   (let ((fill-column most-positive-fixnum))
     (fill-paragraph nil)))
 
-(defun unfill-region (start end)
+(defun wz-unfill-region (start end)
   "Replace newline chars in region by single spaces.
    This command does the inverse of `fill-region'."
   (interactive "r")
   (let ((fill-column most-positive-fixnum))
     (fill-region start end)))
 
-(defun split-name (s)
+(defun wz-split-name (s)
   "Split string `S` into a list of words based on camelCase or other
-delimiters."
+   delimiters."
   (split-string
    (let ((case-fold-search nil))
      (downcase
@@ -163,22 +145,22 @@ delimiters."
        "\\([a-z]\\)\\([A-Z]\\)" "\\1 \\2" s)))
    "[^A-Za-z0-9]+"))
 
-(defun camel-case (s)
+(defun wz-camel-case (s)
   "Convert string `S` to camelCase."
-  (concat (car (split-name s))
-          (mapconcat 'capitalize (cdr (split-name s)) "")))
+  (concat (car (wz-split-name s))
+          (mapconcat 'capitalize (cdr (wz-split-name s)) "")))
 
-(defun dot-case (s)
+(defun wz-dot-case (s)
   "Convert string `S` to dot.case."
-  (mapconcat 'downcase (split-name s) "."))
+  (mapconcat 'downcase (wz-split-name s) "."))
 
-(defun snake-case (s)
+(defun wz-snake-case (s)
   "Convert string `S` to snake_case."
-  (mapconcat 'downcase (split-name s) "_"))
+  (mapconcat 'downcase (wz-split-name s) "_"))
 
-(defun camel-dot-snake ()
-  "Cycle among camelCase, dot.case and snake_case in words.
-If the region is not active the current word at point is used."
+(defun wz-camel-dot-snake ()
+  "Cycle among camelCase, dot.case and snake_case in words. If the
+   region is not active the current word at point is used."
   (interactive)
   (let ((is-region-active (and transient-mark-mode mark-active)))
     (unless is-region-active
@@ -193,9 +175,9 @@ If the region is not active the current word at point is used."
           (message "Not a word at point")
         (delete-region beg end)
         (insert
-         (cond ((string-match-p "\\." str) (snake-case str))
-               ((string-match-p "_"   str) (camel-case str))
-               (t                          (dot-case   str))))
+         (cond ((string-match-p "\\." str) (wz-snake-case str))
+               ((string-match-p "_"   str) (wz-camel-case str))
+               (t                          (wz-dot-case   str))))
         (when is-region-active
           (setq deactivate-mark nil))))))
 
@@ -207,23 +189,44 @@ If the region is not active the current word at point is used."
   (forward-line 1)
   (back-to-indentation))
 
+(defun wz-comment-paragraph ()
+  "Comment or uncomment the current paragraph. Return the cursor to its
+   original position after execution."
+  (interactive)
+  (save-excursion
+    (backward-paragraph)
+    (mark-paragraph)
+    (comment-dwim nil)))
+
+(defun wz-indent-paragraph ()
+  "Indent the current paragraph without _eating_ the leading blank
+   line."
+  (interactive)
+  (save-excursion
+    (let ((end (progn (forward-paragraph) (point)))
+          (beg (progn (backward-paragraph)
+                      ;; If not at the beginning of the file, skip the blank line.
+                      (unless (bobp) (forward-line 1))
+                      (point))))
+      (indent-region beg end))))
+
+
 ;;----------------------------------------------------------------------
 ;; 3. Code Structure & Formatting
 ;;----------------------------------------------------------------------
 
-(defun blank-line-p ()
+(defun wz-blank-line-p ()
   "Return non-nil if current line is blank."
   (save-excursion
     (beginning-of-line)
     (looking-at-p "^[[:space:]]*$")))
 
 (defun wz-insert-rule-from-point-to-margin (&optional char)
-  "Insert a commented rule from `point' to `fill-column'.
-If the line is blank, it starts a comment. Useful to divide code
-into sections."
+  "Insert a commented rule from `point' to `fill-column'. If the line is
+   blank, it starts a comment. Useful to divide code into sections."
   (interactive)
   (let ((char (or char ?-)))
-    (if (blank-line-p)
+    (if (wz-blank-line-p)
         (progn
           (indent-according-to-mode)
           (insert comment-start)))
@@ -234,10 +237,10 @@ into sections."
     (delete-region (point) (line-end-position))))
 
 (defun wz-insert-rule-and-comment-3 ()
-  "Insert a commented rule with length relative to
-`fill-column' (62.5%)."
+  "Insert a commented rule with length relative to `fill-column'
+   (62.5%)."
   (interactive)
-  (if (blank-line-p)
+  (if (wz-blank-line-p)
       (progn
         (indent-according-to-mode)
         (insert comment-start)))
@@ -251,8 +254,8 @@ into sections."
   (comment-region (line-beginning-position) (point)))
 
 (defun wz-right-align-commented-text (text comment-char-size)
-  "Write TEXT aligned to the right margin at `fill-column' and
-comment it out."
+  "Write TEXT aligned to the right margin at `fill-column' and comment
+   it out."
   (insert "\n" text)
   (comment-region (line-beginning-position) (point))
   (backward-char (length text))
@@ -383,9 +386,9 @@ comment it out."
 
 ;; --- Polymode / Rmd ---
 
-(defun wz-insert-chunk ()
-  "Insert R code chunk environment for Rmd/Qmd sessions.
-Positions cursor between opening and closing delimiters for editing."
+(defun wz-polymode-insert-chunk ()
+  "Insert R code chunk environment for Rmd/Qmd sessions. Positions
+   cursor between opening and closing delimiters for editing."
   (interactive)
   (let ((in-ess-mode (derived-mode-p 'ess-mode)))
     (if in-ess-mode
@@ -398,16 +401,16 @@ Positions cursor between opening and closing delimiters for editing."
   (end-of-line))
 
 (defun wz-polymode-next-chunk ()
-  "Move to the first line after the next code chunk header.
-Searches forward for the next chunk opening (```{...})."
+  "Move to the first line after the next code chunk header. Searches
+   forward for the next chunk opening (```{...})."
   (interactive)
   (if (search-forward-regexp "^```{.*}$" nil t)
       (forward-line 1)
     (message "No more chunks found")))
 
 (defun wz-polymode-previous-chunk ()
-  "Move to the first line after the previous code chunk header.
-Searches backward for the previous chunk opening (```{...})."
+  "Move to the first line after the previous code chunk header. Searches
+   backward for the previous chunk opening (```{...})."
   (interactive)
   (if (search-backward-regexp "^```$" nil t)
       (if (search-backward-regexp "^```{.*}$" nil t)
@@ -439,10 +442,10 @@ Searches backward for the previous chunk opening (```{...})."
   (wz-polymode-next-chunk))
 
 (defun wz-polymode-eval-line-by-line (end)
-  "This function evaluates only R code inside Rmd chunks from
-   `point' to `end'. The function determine the boundaries of a
-   chunk based on regex. If the point is a chunk, then each line
-   is evaluated and the point go to the next line."
+  "This function evaluates only R code inside Rmd chunks from `point' to
+   `end'. The function determine the boundaries of a chunk based on
+   regex. If the point is a chunk, then each line is evaluated and the
+   point go to the next line."
   (interactive)
   ;; Turn on/off the `inside-chunk' based on the major-mode at point.
   (if (derived-mode-p 'ess-mode)
@@ -466,9 +469,9 @@ Searches backward for the previous chunk opening (```{...})."
         (setq inside-chunk nil))))
 
 (defun wz-polymode-eval-chunks-on-region ()
-  "This function calls `wz-polymode-eval-line-by-line'.
-   It only determines if region is activated. Then it evaluates
-   the code inside the chunks in the region."
+  "This function calls `wz-polymode-eval-line-by-line'. It only
+   determines if region is activated. Then it evaluates the code inside
+   the chunks in the region."
   (interactive)
   (if (region-active-p)
       ;; If region is activated.
@@ -482,22 +485,36 @@ Searches backward for the previous chunk opening (```{...})."
 
 ;; --- ESS / R Editing ---
 
+(defun wz-ess-eval-word ()
+  "Mark the symbol under the cursor and evaluate it in ESS/R. Unlike
+   `mark-word`, this function respects dots and underscores common in R
+   objects."
+  (interactive)
+  (let ((bounds (bounds-of-thing-at-point 'symbol)))
+    (if bounds
+        (save-excursion
+          ;; 1. Define the region (beg and end)
+          (let ((beg (car bounds))
+                (end (cdr bounds)))
+            ;; 2. Send to the ESS process.
+            ;; Use `ess-send-region` because it is the most stable API.
+            (ess-send-region (ess-get-process) beg end)))
+      (message "No symbol (object) found under the cursor."))))
+
 (defun wz-ess-forward-R-assigment-symbol ()
-  "Move cursor to the next occurrence of 「<-」 or single 「=」.
-   Excludes 「==」 and 「!=」. Adapted from:
-   URL `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'."
+  "Move cursor to the next occurrence of `<-' or single `='. Excludes
+   `==' and `!='."
   (interactive)
   (search-forward-regexp "<-\\|[^!=]=[^=]" nil t))
 
 (defun wz-ess-backward-R-assigment-symbol ()
-  "Move cursor to the previous occurrence of 「<-」 or single 「=」.
-   Excludes 「==」 and 「!=」. Adapted from:
-   `http://ergoemacs.org/emacs/emacs_jump_to_punctuations.html'."
+  "Move cursor to the previous occurrence of `<-' or single `='.
+   Excludes `==' and `!='."
   (interactive)
   (search-backward-regexp "<-\\|[^!=]=[^=]" nil t))
 
 (defun wz-ess-align-R-assigment-operators ()
-  "Align assignment operators (<- or =) in the active region."
+  "Align assignment operators (`<-' or `=') in the active region."
   (interactive)
   (save-excursion
     (align-regexp
@@ -584,17 +601,17 @@ Searches backward for the previous chunk opening (```{...})."
     (unhighlight-regexp rgxp)))
 
 (defun wz-align-by-separator (beg end separator)
-  "Align the selected region using SEPARATOR.
-Ensures all lines (except the last) end with the separator and preserves
-the original block indentation.
-Before:
-  ~mpg, ~cyl, ~disp,
-  21,6,160,
-  21,6,160
-After:
-  ~mpg, ~cyl, ~disp,
-    21,    6,   160,
-    21,    6,   160"
+  "Align the selected region using SEPARATOR. Ensures all lines (except
+   the last) end with the separator and preserves the original block
+   indentation.
+   Before:
+     ~mpg, ~cyl, ~disp,
+     21,6,160,
+     21,6,160
+   After:
+     ~mpg, ~cyl, ~disp,
+       21,    6,   160,
+       21,    6,   160"
   (interactive "r\nsSeparator (e.g., ,): ")
   (let ((sep (if (string-equal separator "") "," separator))
         ;; Capture the indentation of the first line to replicate in the block.
@@ -660,14 +677,10 @@ After:
         (goto-char (point-max))
         (delete-char -2)))))
 
-
-;;----------------------------------------------------------------------
-;; Function based in the bm-bookmark-regexp-region.
-;; This function bookmark all chunks in *.Rnw and *.Rmd buffers.
-
 (defun wz-bm-bookmark-chunk-in-buffer ()
-  "Set bookmark on the first line inside each chunk in Rnw and Rmd files.
-Bookmarks are placed just after the chunk header, inside the code block."
+  "Set bookmark on the first line inside each chunk in Rnw and Rmd
+   files. Bookmarks are placed just after the chunk header, inside the
+   code block."
   (interactive)
   (let ((regexp "^<<.*>>=$\\|^```{.*}$")
         (annotation nil)
@@ -686,24 +699,44 @@ Bookmarks are placed just after the chunk header, inside the code block."
         (forward-line 1)))
     (message "%d bookmark(s) created." count)))
 
-;;----------------------------------------------------------------------
-;; Font:
 ;; https://github.com/basille/.emacs.d/blob/master/functions/ess-indent-region-as-R-function.el
-
 ;; The function below is a modification of the original to use
 ;; formatR::tidy_source(). This is because formatR have functions with
 ;; arguments to control the output, as keep comments and set the width
 ;; cutoff.
 
-(defun ess-indent-region-with-formatR-tidy-source (beg end)
-  "Format region of code R using formatR::tidy_source()."
+(defun wz-ess--region-to-escaped-string (beg end)
+  "Return escaped string from region between BEG and END. Escapes quotes
+   to safely embed the text in an R string literal."
+  (replace-regexp-in-string
+   "\"" "\\\\\\&"
+   (replace-regexp-in-string
+    "\\\\\"" "\\\\\\&"
+    (buffer-substring-no-properties beg end))))
+
+(defun wz-ess--replace-region-with-ess-output (beg end buf &optional skip-style trim-chars)
+  "Replace region between BEG and END with the output in BUF. SKIP-STYLE
+   controls how to skip the header in BUF: use 'eol to skip the first
+   line, or anything else to skip leading spaces. TRIM-CHARS removes
+   characters from the end of the inserted string."
+  (let (string)
+    (with-current-buffer buf
+      (goto-char (point-max))
+      (let ((output-end (point)))
+        (goto-char (point-min))
+        (pcase skip-style
+          ('eol (goto-char (1+ (point-at-eol))))
+          (_ (skip-chars-forward " +")))
+        (setq string (buffer-substring-no-properties (point) output-end))))
+    (delete-region beg end)
+    (insert string)
+    (when (and trim-chars (> trim-chars 0))
+      (delete-char (- trim-chars)))))
+
+(defun wz-ess-indent-region-with-formatR-tidy-source (beg end)
+  "Format region of code R using `formatR::tidy_source()'."
   (interactive "r")
-  (let ((string
-         (replace-regexp-in-string
-          "\"" "\\\\\\&"
-          (replace-regexp-in-string ;; how to avoid this double matching?
-           "\\\\\"" "\\\\\\&"
-           (buffer-substring-no-properties beg end))))
+  (let ((string (wz-ess--region-to-escaped-string beg end))
         (buf (get-buffer-create "*ess-command-output*")))
     (ess-force-buffer-current "Process to load into:")
     (ess-command
@@ -712,26 +745,13 @@ Bookmarks are placed just after the chunk header, inside the code block."
           formatR::tidy_source(text = \"\n%s\",
                                 arrow = TRUE, width.cutoff = 60) })\n"
       string) buf)
-    (with-current-buffer buf
-      (goto-char (point-max))
-      ;; (skip-chars-backward "\n")
-      (let ((end (point)))
-        (goto-char (point-min))
-        (goto-char (1+ (point-at-eol)))
-        (setq string (buffer-substring-no-properties (point) end))))
-    (delete-region beg end)
-    (insert string)))
+    (wz-ess--replace-region-with-ess-output beg end buf 'eol)))
 
 (defun wz-ess-stringi-escape-unicode (beg end)
   "Replace non-ASCII by the corresponding unicode. Select the text
-   without the quotes and apply the function. By Walmes Zeviani."
+   without the quotes and apply the function."
   (interactive "r")
-  (let ((string
-         (replace-regexp-in-string
-          "\"" "\\\\\\&"
-          (replace-regexp-in-string
-           "\\\\\"" "\\\\\\&"
-           (buffer-substring-no-properties beg end))))
+  (let ((string (wz-ess--region-to-escaped-string beg end))
         (buf (get-buffer-create "*ess-command-output*")))
     (ess-force-buffer-current "Process to load into:")
     (ess-command
@@ -740,29 +760,14 @@ Bookmarks are placed just after the chunk header, inside the code block."
           cat(stringi::stri_escape_unicode(\"%s\"),
               \"\\n\") })\n"
       string) buf)
-    (with-current-buffer buf
-      (goto-char (point-max))
-      (let ((end (point)))
-        (goto-char (point-min))
-        (skip-chars-forward " +")
-        (setq string (buffer-substring-no-properties (point) end))))
-    (delete-region beg end)
-    (insert string)
-    (delete-char -2)))
+    (wz-ess--replace-region-with-ess-output beg end buf nil 2)))
 
 (defun wz-ess-find-and-insert-namespace (beg end)
-  "Preceds a function with its namespace,
-   so `mean(x) -> stats::mean(x)' and
-   `xyplot(...) -> lattice::xyplot()'.
-   Call this function in a R major mode buffer with the function name
-   selected. By Walmes Zeviani."
+  "Preceds a function with its namespace, so `mean(x) -> stats::mean(x)'
+   and `xyplot(...) -> lattice::xyplot()'. Call this function in a R
+   major mode buffer with the function name selected."
   (interactive "r")
-  (let ((string
-         (replace-regexp-in-string
-          "\"" "\\\\\\&"
-          (replace-regexp-in-string
-           "\\\\\"" "\\\\\\&"
-           (buffer-substring-no-properties beg end))))
+  (let ((string (wz-ess--region-to-escaped-string beg end))
         (buf (get-buffer-create "*ess-command-output*")))
     (ess-force-buffer-current "Process to load into:")
     (ess-command
@@ -772,30 +777,14 @@ Bookmarks are placed just after the chunk header, inside the code block."
            cat(paste0(sub('.*:', '', utils::find(x)), '::', x), \"\\n\")
        })\n"
       string) buf)
-    (with-current-buffer buf
-      (goto-char (point-max))
-      (let ((end (point)))
-        (goto-char (point-min))
-        (skip-chars-forward " +")
-        (setq string (buffer-substring-no-properties (point) end))))
-    (delete-region beg end)
-    (insert string)
-    (delete-char -1)))
+    (wz-ess--replace-region-with-ess-output beg end buf nil 1)))
 
 (defun wz-ess-insert-function-args (beg end)
-  "This function inserts all arguments of a function call.
-   When you mark the word `plot' this function returns
-   `plot(x, y, ....)'. By Walmes Zeviani."
+  "This function inserts all arguments of a function call. When you mark
+   the word `plot' this function returns `plot(x, y, ....)'."
   (interactive "r")
-  (let ((string
-         (replace-regexp-in-string
-          "\"" "\\\\\\&"
-          (replace-regexp-in-string
-           "\\\\\"" "\\\\\\&"
-           (buffer-substring-no-properties beg end)))
-         )
-        (buf (get-buffer-create "*ess-command-output*"))
-        )
+  (let ((string (wz-ess--region-to-escaped-string beg end))
+        (buf (get-buffer-create "*ess-command-output*")))
     (ess-force-buffer-current "Process to load into:")
     (ess-command
      (format
@@ -823,26 +812,13 @@ Bookmarks are placed just after the chunk header, inside the code block."
            usage(\"%s\", %d)
        })\n"
       string (save-excursion (goto-char beg) (current-column))) buf)
-    (with-current-buffer buf
-      (goto-char (point-max))
-      (let ((end (point)))
-        (goto-char (point-min))
-        (skip-chars-forward " +")
-        (setq string (buffer-substring-no-properties (point) end))))
-    (delete-region beg end)
-    (insert string)
-    (delete-char -1)
+    (wz-ess--replace-region-with-ess-output beg end buf nil 1)
     (goto-char end)))
 
 (defun wz-ess-open-html-documentation (beg end)
   "Open HTML documentation for the object at point in R."
   (interactive "r")
-  (let ((string
-         (replace-regexp-in-string
-          "\"" "\\\\\\&"
-          (replace-regexp-in-string
-           "\\\\\"" "\\\\\\&"
-           (buffer-substring-no-properties beg end))))
+  (let ((string (wz-ess--region-to-escaped-string beg end))
         (buf (get-buffer-create "*ess-command-output*")))
     (ess-force-buffer-current "Process to load into:")
     (ess-command
@@ -861,10 +837,14 @@ Bookmarks are placed just after the chunk header, inside the code block."
   )
 
 (defun wz-ess-newline-indented ()
-  "Execute `ess-roxy-newline` and `ess-indent-or-complete`."
+  "Execute `ess-roxy-newline' and `ess-indent-or-complete'."
   (interactive)
-  (ess-roxy-newline)
-  (ess-indent-or-complete))
+  (if (nth 2 (syntax-ppss))
+      (progn
+        (comment-normalize-vars)
+        (comment-indent-new-line))
+    (ess-roxy-newline)
+    (ess-indent-or-complete)))
 
 (defun wz-ess-one-argument-by-line-and-indent-region (start end)
   "Break lines after commas, open parentheses, and closing
@@ -891,88 +871,155 @@ Bookmarks are placed just after the chunk header, inside the code block."
   )
 
 (defun wz-ess-cancel-on-inferior-ess-buffer ()
-  "Switch to the inferior ESS buffer, interrupt any running job,
-   and switch back to the script buffer."
+  "Switch to the inferior ESS buffer, interrupt any running job, and
+   switch back to the script buffer."
   (interactive)
   (ess-switch-to-inferior-or-script-buffer t)
   (comint-interrupt-subjob)
   (ess-switch-to-inferior-or-script-buffer t))
 
+(defun wz-ess-roxy-toggle-custom (beg end)
+  "Toggle the roxygen prefix (#' or ##') robustly. Handles blank lines
+   correctly and prioritizes the #' style."
+  (interactive "r")
+  (let ((beg (if (use-region-p) beg (line-beginning-position)))
+        (end (if (use-region-p) end (line-end-position))))
+    (save-excursion
+      (save-restriction
+        ;; Narrow the region to avoid side effects.
+        (narrow-to-region beg end)
+        (goto-char (point-min))
+        ;; Decide the action based on the first line of the region.
+        (let ((is-roxygen (looking-at "^#+'")))
+          (while (not (eobp))
+            (beginning-of-line)
+            (if is-roxygen
+                ;; REMOVE: Match #' or ##' followed by zero or one space.
+                (when (looking-at "^#+' ?")
+                  (replace-match ""))
+              ;; ADD: Insert the default roxygen prefix.
+              (unless (looking-at "^$") ; Avoid extra space on blank lines.
+                (insert "#' "))
+              (when (looking-at "^$")
+                (insert "#'")))
+            (forward-line 1)))))))
+
+
 ;;----------------------------------------------------------------------
-;; 5. Keybindings
+;; 5. LSP / Treemacs / Imenu
 ;;----------------------------------------------------------------------
 
-(define-key global-map "\M-Q" 'unfill-region)
-(define-key global-map (kbd "C-S-o") 'wz-occur)
-(define-key occur-mode-map (kbd "q") 'wz-occur-mode-quit)
+;; Already defined in LSP: "<f8>"
+(defun lsp-ui-imenu-toggle ()
+  "Toggle the lsp-ui-imenu buffer."
+  (interactive)
+  (if (get-buffer "*lsp-ui-imenu*")
+      (kill-buffer "*lsp-ui-imenu*")
+    (lsp-ui-imenu)
+    )
+  )
 
-(global-set-key (kbd "S-<delete>") 'cut-line-or-region)  ; cut.
-(global-set-key (kbd "C-<insert>") 'copy-line-or-region) ; copy.
-(global-set-key (kbd "C-c d") 'duplicate-line)
-(global-set-key (kbd "C-x w") 'mark-whole-word)
-(global-set-key (kbd "C-x t") 'open-shell-split-window)
-(global-set-key (kbd "M-;") 'comment-line-or-region)
-(global-set-key (kbd "C-ç") 'camel-dot-snake)
-(global-set-key (kbd "<C-i>") 'wz-indent-and-move-to-next-line)
+;; Already defined in LSP: "C-<f8>"
+(defun lsp-treemacs-symbols-toggle ()
+  "Toggle the lsp-treemacs-symbols buffer."
+  (interactive)
+  (if (get-buffer "*LSP Symbols List*")
+      (kill-buffer "*LSP Symbols List*")
+    (progn (lsp-treemacs-symbols)
+           (other-window -1))))
 
-(global-set-key (kbd "C-c -") 'wz-insert-rule-from-point-to-margin)
-(global-set-key (kbd "C-M--") 'wz-insert-rule-and-comment-3)
-(global-set-key (kbd "C-c =")
-                (lambda ()
-                  (interactive)
-                  (wz-insert-rule-from-point-to-margin ?=)))
-(global-set-key (kbd "C-c /")
-                (lambda ()
-                  (interactive)
-                  (wz-insert-rule-from-point-to-margin ?/)))
-(global-set-key (kbd "C-c ,")
-                (lambda ()
-                  (interactive)
-                  (wz-insert-rule-from-point-to-margin ?¬)))
-(global-set-key (kbd "C-c .")
-                (lambda ()
-                  (interactive)
-                  (wz-insert-rule-from-point-to-margin ?─)))
+;;----------------------------------------------------------------------
+;; 6. Themes
+;;----------------------------------------------------------------------
 
-;; ESS / R Mode Bindings
-(eval-after-load 'ess-mode
-  '(define-key ess-mode-map (kbd "C-<escape>") 'wz-ess-cancel-on-inferior-ess-buffer))
+(defvar wz-theme-list '(doom-one
+                        doom-one-light
+                        doom-dracula
+                        doom-nord-light)
+  "List of themes to cycle through. Add or remove theme names here.")
 
-(add-hook
- 'markdown-mode-hook
- (lambda ()
-   (local-set-key (kbd "C-c i i") 'wz-insert-chunk)
-   (local-set-key (kbd "<f6>")    'wz-polymode-eval-R-chunk)
-   (local-set-key (kbd "S-<f6>")  'wz-polymode-eval-R-chunk-and-next)
-   (local-set-key (kbd "S-<f7>")  'wz-polymode-previous-chunk)
-   (local-set-key (kbd "S-<f8>")  'wz-polymode-next-chunk)))
+(defun wz-cycle-themes ()
+  "Cycle through themes defined in `wz-theme-list`."
+  (interactive)
+  (let* ((current (car custom-enabled-themes))
+         (next (or (cadr (member current wz-theme-list))
+                   (car wz-theme-list))))
+    ;; 1. Disable all active themes to avoid color "bleeding"
+    (mapc #'disable-theme custom-enabled-themes)
+    ;; 2. Load the next theme (the 't' bypasses the safety prompt)
+    (load-theme next t)
+    (message "Current theme: %s" next)))
 
-(add-hook
- 'ess-mode-hook
- (lambda ()
-   (local-set-key (kbd "C-c i i") 'wz-insert-chunk)
-   (local-set-key (kbd "<C-f1>")  'wz-ess-open-html-documentation)
-   (local-set-key (kbd "<C-f4>")  'wz-ess-insert-function-args)
-   (local-set-key (kbd "<f6>")    'wz-polymode-eval-R-chunk)
-   (local-set-key (kbd "<f7>")    'wz-ess-break-or-join-lines-wizard)
-   (local-set-key (kbd "S-<f6>")  'wz-polymode-eval-R-chunk-and-next)
-   (local-set-key (kbd "S-<f7>")  'wz-polymode-previous-chunk)
-   (local-set-key (kbd "S-<f8>")  'wz-polymode-next-chunk)
-   (local-set-key (kbd "C-c r")   'ess-eval-word)
-   (local-set-key (kbd "C-c a")   'wz-ess-align-R-assigment-operators)
-   (local-set-key (kbd "C-,")     'wz-ess-backward-break-line-here)
-   (local-set-key (kbd "C-.")     'wz-ess-forward-break-line-here)
-   (local-set-key (kbd "C-:")     'wz-ess-find-and-insert-namespace)
-   (local-set-key (kbd "<S-f9>")  'wz-ess-backward-R-assigment-symbol)
-   (local-set-key (kbd "<S-f10>") 'wz-ess-forward-R-assigment-symbol)
-   (local-set-key (kbd "M-j")        'wz-ess-newline-indented)
-   (local-set-key (kbd "<S-return>") 'wz-ess-newline-indented)
-   (local-set-key (kbd "<backtab>")  'wz-ess-one-argument-by-line-and-indent-region)
-   ;; (local-set-key (kbd "C-c C-h") 'ess-edit-indent-call-sophisticatedly)
-   (local-set-key (kbd "C-M-|")
-                  'ess-indent-region-with-formatR-tidy-source)
-   (local-set-key (kbd "C-?")
-                  'wz-ess-stringi-escape-unicode)))
+
+;;----------------------------------------------------------------------
+;; 7. Keybindings
+;;----------------------------------------------------------------------
+
+;; ---- Global shortcuts (available in all modes) ----------------------
+
+(map! "M-Q"         #'wz-unfill-region
+      "C-S-o"       #'wz-occur
+      "S-<delete>"  #'wz-cut-line-or-region
+      "C-<insert>"  #'wz-copy-line-or-region
+      "C-<f12>"     #'wz-cycle-themes
+      "C-c d"       #'wz-duplicate-line
+      "C-x w"       #'wz-mark-whole-word
+      "C-x t"       #'wz-open-shell-split-window
+      "M-;"         #'wz-comment-line-or-region
+      "C-ç"         #'wz-camel-dot-snake
+      "<C-i>"       #'wz-indent-and-move-to-next-line
+      "M-."         #'wz-comment-paragraph
+      "M-+"         #'wz-indent-paragraph
+
+      ;; Insert rules and separators
+      "C-c -"       #'wz-insert-rule-from-point-to-margin
+      "C-M--"       #'wz-insert-rule-and-comment-3
+
+      ;; Use cmd! to replace repetitive lambdas
+      "C-c ="       (cmd! (wz-insert-rule-from-point-to-margin ?=))
+      "C-c /"       (cmd! (wz-insert-rule-from-point-to-margin ?/))
+      "C-c ,"       (cmd! (wz-insert-rule-from-point-to-margin ?¬))
+      "C-c ."       (cmd! (wz-insert-rule-from-point-to-margin ?─)))
+
+(after! replace
+    ;; Occur Mode typically resides in the 'replace' package.
+    (map! :map occur-mode-map
+          "q" #'wz-occur-mode-quit))
+
+;; ---- Shared shortcuts (Markdown & ESS) ------------------------------
+
+(after! markdown-mode
+  (map! :map (markdown-mode-map ess-mode-map)
+        "C-c i i" #'wz-polymode-insert-chunk
+        "<f6>"    #'wz-polymode-eval-R-chunk
+        "S-<f6>"  #'wz-polymode-eval-R-chunk-and-next
+        "S-<f7>"  #'wz-polymode-previous-chunk
+        "S-<f8>"  #'wz-polymode-next-chunk))
+
+;; ---- ESS-specific shortcuts (R) -------------------------------------
+
+(after! ess-roxy
+  (map! :map ess-roxy-mode-map
+        "C-c C-o C-c" #'wz-ess-roxy-toggle-custom))
+
+(after! ess-mode
+  (map! :map ess-mode-map
+        "C-<escape>"  #'wz-ess-cancel-on-inferior-ess-buffer
+        "<C-f1>"      #'wz-ess-open-html-documentation
+        "<C-f4>"      #'wz-ess-insert-function-args
+        "<f7>"        #'wz-ess-break-or-join-lines-wizard
+        "C-c r"       #'wz-ess-eval-word
+        "C-c a"       #'wz-ess-align-R-assigment-operators
+        "C-,"         #'wz-ess-backward-break-line-here
+        "C-."         #'wz-ess-forward-break-line-here
+        "C-:"         #'wz-ess-find-and-insert-namespace
+        "S-<f9>"      #'wz-ess-backward-R-assigment-symbol
+        "S-<f10>"     #'wz-ess-forward-R-assigment-symbol
+        "M-j"         #'wz-ess-newline-indented
+        "S-<return>"  #'wz-ess-newline-indented
+        "<backtab>"   #'wz-ess-one-argument-by-line-and-indent-region
+        "C-M-|"       #'wz-ess-indent-region-with-formatR-tidy-source
+        "C-?"         #'wz-ess-stringi-escape-unicode))
 
 ;;----------------------------------------------------------------------
 

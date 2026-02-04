@@ -104,24 +104,11 @@
  "C-z"       #'undo
  "C-/"       #'company-files
 
- ;; Screenshot
- "M-x screenshot" #'screenshot
-
  ;; Functions previously bound to global keys
  "C-~"           #'fixup-whitespace
  "M-<delete>"    #'fixup-whitespace
  "M-~"           #'delete-indentation
  "S-<backspace>" #'delete-indentation
-
- ;; Paragraph manipulation
- "M-." (cmd! (progn
-               (backward-paragraph)
-               (mark-paragraph)
-               (comment-dwim nil)))
- "M-+" (cmd! (progn
-               (backward-paragraph)
-               (mark-paragraph)
-               (indent-region (region-beginning) (region-end))))
 
  ;; Frame toggles
  "<S-f11>" #'toggle-menu-bar-mode-from-frame
@@ -145,14 +132,8 @@
 
  ;; YaFolding
  "C-{"     #'yafolding-hide-parent-element
- "C-}"     #'yafolding-toggle-element
+ "C-}"     #'yafolding-toggle-element)
 
- ;; LSP Treemacs
- "C-<f8>"  #'lsp-treemacs-symbols-toggle
- "<f8>"    #'lsp-ui-imenu-toggle)
-
-;; Logic for commenting paragraph was custom: "M-h M-; M-}"
-;; Logic for indenting paragraph was custom: "M-h C-M-\"
 
 ;;----------------------------------------------------------------------
 ;; 5. Modules & Packages
@@ -167,6 +148,13 @@
 (use-package! company
   :bind
   ("C-*" . company-complete))
+
+(after! company
+  (map! :map company-active-map
+        "TAB"      #'company-complete-selection
+        "<tab>"    #'company-complete-selection
+        "RET"      #'company-complete-selection
+        "<return>" #'company-complete-selection))
 
 ;;--- Magit (Git) ------------------------------------------------------
 (use-package! magit
@@ -243,6 +231,28 @@
   (setq screenshot-schemes '(("current-directory"
                               :dir default-directory))
         screenshot-default-scheme "current-directory"))
+
+;; Define `screenshot-font-family' in the `custom.el' to avoid issues.
+(after! screenshot
+  (setq screenshot-font-size 12
+        screenshot-line-numbers-p nil
+        screenshot-relative-line-numbers-p nil
+        screenshot-remove-indent-p t
+        screenshot-shadow-offset-horizontal 0
+        screenshot-shadow-offset-vertical 0)
+  ;; Override the original package function to save the image with
+  ;; timestamp.
+  (screenshot--def-action save
+    "Save the current selection with filename and timestamp to avoid
+     always overwriting the same file."
+    (let* ((base (file-name-sans-extension
+                  (or (buffer-file-name)
+                      (expand-file-name "screenshot" default-directory))))
+           ;; Generate date and time suffix.
+           (timestamp (format-time-string "-%Y-%m-%d_%H-%M-%S"))
+           (final-path (concat base timestamp ".png")))
+      (rename-file screenshot--tmp-file final-path t)
+      (message "Screenshot saved as: %s" final-path))))
 
 ;;--- Org Mode & Presentation ------------------------------------------
 (use-package! visual-fill-column
@@ -330,6 +340,7 @@
   (lsp-ui-sideline-ignore-duplicate t)
   (lsp-ui-sideline-show-code-actions nil)
   (lsp-ui-doc-show-with-cursor nil)
+  (lsp-ui-imenu-buffer-position 'left)
   (lsp-headerline-breadcrumb-enable t)
   :config
   (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
@@ -432,15 +443,9 @@
       (error "ess-eval-buffer canceled!"))))
 
 ;; Turn off flycheck in LSP for R (ESS) buffers.
-;; (add-hook! 'lsp-mode-hook
-;;     (defun wz-disable-flycheck-in-lsp-r-only ()
-;;         "Desativa o flycheck no LSP apenas se o buffer for de R (ESS)."
-;;         (when (derived-mode-p 'ess-mode)
-;;             (flycheck-mode -1))))
-
 (add-hook! 'lsp-mode-hook
     (defun wz-disable-flycheck-in-lsp-selected-modes ()
-        "Desativa o flycheck no LSP apenas para R (ESS) e Python."
+        "Disable flycheck in LSP only for R (ESS) and Python."
         (when (derived-mode-p 'ess-mode 'python-mode)
             (flycheck-mode -1))))
 
@@ -454,36 +459,8 @@
 (use-package! quarto-mode)
 
 ;;--- Python -----------------------------------------------------------
-;; Note: Doom has a `(python +lsp)` module that handles much of this.
-;; Please ensure you have enabled `(python +lsp)` in `init.el`.
-
-;; (use-package! python
-;;   :config
-;;   (setq python-indent-offset 4)
-;;   ;; Path to MS Python Language Server if required manually
-;;   (setq lsp-python-ms-executable
-;;         "~/Documents/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer"))
-;;
-;; (use-package! elpy
-;;   :init (elpy-enable)
-;;   :config
-;;   (setq elpy-rpc-python-command "/home/walmes/anaconda3/bin/python3"))
-;;
-;; (use-package! conda
-;;   :init
-;;   (setq conda-anaconda-home (expand-file-name "~/anaconda3")
-;;         conda-env-home-directory (expand-file-name "~/anaconda3"))
-;;   :config
-;;   (conda-env-initialize-interactive-shells)
-;;   (conda-env-initialize-eshell)
-;;   (conda-env-autoactivate-mode t))
-;;
-;; (use-package! anaconda-mode
-;;   :hook
-;;   (python-mode . anaconda-mode)
-;;   (python-mode . anaconda-eldoc-mode))
-
-;; ---- Configuração Python & Anaconda ---------------------------------
+;; NOTE: Doom has a `(python +lsp +conda +pyright)` module that handles
+;; much of this. Please ensure you have enabled it in `init.el`.
 
 ;;$ source ~/anaconda3/bin/activate
 ;;$ conda activate base
@@ -493,104 +470,109 @@
 ;; Activate a conda virtual environment: `M-x conda-env-activate'.
 ;; Open Python REPL: `M-x run-python'.
 
-(after! python
-  ;; 1. Força o modo interativo para garantir o echo.
-  (setq python-shell-interpreter-args "-i")
+(defvar wz-anaconda-root (expand-file-name "~/anaconda3")
+  "Root directory for the Anaconda installation.")
+(defvar wz-anaconda-python (expand-file-name "~/anaconda3/bin/python3")
+  "Absolute path to the Anaconda Python executable.")
+(defvar wz-anaconda-python-bin "/bin/python3"
+  "Relative Python executable path inside a conda environment.")
 
-  ;; 2. Resolve o aviso "TERM=dumb" e o erro do pyrepl (Python 3.13+).
-  ;; Isso diz ao Python para não tentar ser "esperto" dentro do Emacs.
+(after! python
+  ;; 1. Force interactive mode to ensure echo.
+  (setq python-shell-interpreter-args "-i")
+  ;; 2. Fix "TERM=dumb" warning and pyrepl error (Python 3.13+).
+  ;; This tells Python not to try to be "smart" inside Emacs.
   (setenv "PYTHON_BASIC_REPL" "1")
-  ;;
-  ;; ;; Opcional: Garante que o Python ignore variáveis de ambiente do sistema
-  ;; ;; que possam forçar terminais coloridos/complexos.
+  ;; ;; Optional: Ensure Python ignores system environment variables
+  ;; ;; that may force colored/complex terminals.
   ;; (setenv "TERM" "dumb")
 
-  ;; Define o interpretador padrão do Anaconda.
-  (setq python-shell-interpreter (expand-file-name "~/anaconda3/bin/python3"))
+  ;; Set the default Anaconda interpreter.
+  (setq python-shell-interpreter wz-anaconda-python)
 
-  ;; Função: Envia a linha e pula para a próxima (Estilo Ctrl+Enter do R).
+  ;; Function: Send line and step to next (R-style Ctrl+Enter).
   ;; (defun wz-python-send-line-and-step ()
-  ;;   "Envia a linha atual para o shell do Python e move para a próxima."
+  ;;   "Send current line to Python shell and move to next."
   ;;   (interactive)
   ;;   (python-shell-send-statement)
   ;;   (forward-line 1))
 
   (defun wz-python-send-line-and-step ()
-    "Envia a linha para o Python. Abre o processo se não existir,
-divide a janela e garante a inicialização correta."
+    "Send line to Python. Open process if it doesn't exist, split window
+     and ensure correct initialization."
     (interactive)
     (let ((proc (python-shell-get-process))
-          (cmd (python-shell-calculate-command))) ; Usa o path do Anaconda definido no config
+          (cmd (python-shell-calculate-command))) ; Use Anaconda path defined in config
       (unless proc
         (save-selected-window
-          ;; O 't' faz o split. O 'save-selected-window' devolve o foco.
+          ;; The 't' does the split. 'save-selected-window' returns focus.
           (run-python cmd nil t)
           (setq proc (python-shell-get-process))
-          ;; Sincronização: Aguarda 0.5s para o Python carregar
-          ;; as funções internas do Emacs (__PYTHON_EL_eval)
+          ;; Synchronization: Wait 0.5s for Python to load
+          ;; Emacs internal functions (__PYTHON_EL_eval)
           (accept-process-output proc 0.5)))
 
-      ;; Envia o código e pula para a próxima linha.
+      ;; Send code and jump to next line.
       (python-shell-send-statement)
       (forward-line 1)))
 
-  ;; Mapeamento de Teclas (Para usuários de Leader/Emacs-style).
+  ;; Key Mapping (For Leader/Emacs-style users).
   (map! :map python-mode-map
-        ;; Atalho universal de execução.
+        ;; Universal execution shortcut.
         "C-<return>" #'wz-python-send-line-and-step
 
-        ;; Atalhos com Local-Leader (C-c C-z, C-c C-r, etc).
+        ;; Shortcuts with Local-Leader (C-c C-z, C-c C-r, etc).
         :localleader
-        "z" #'python-shell-switch-to-shell  ; Alterna entre script e terminal.
-        "r" #'python-shell-send-region      ; Envia bloco selecionado.
-        "b" #'python-shell-send-buffer      ; Envia o arquivo todo.
-        "f" #'python-shell-send-defun)      ; Envia a função atual.
+        "z" #'python-shell-switch-to-shell  ; Switch between script and terminal.
+        "r" #'python-shell-send-region      ; Send selected block.
+        "b" #'python-shell-send-buffer      ; Send entire file.
+        "f" #'python-shell-send-defun)      ; Send current function.
   )
 
 (add-hook! python-mode
-  ;; Configurações de variáveis locais
+           ;; Local variable settings
   (setq-local lsp-diagnostics-provider :none
               comment-add 0)
-  ;; Ativação/Desativação de Minor Modes.
+  ;; Enable/Disable Minor Modes.
   (flycheck-mode -1))
 
-;; ---- Configuração de Auto-scroll no Python REPL ---------------------
+;;---- Python REPL Auto-scroll Configuration ---------------------------
 (add-hook 'inferior-python-mode-hook
-    (lambda ()
-      ;; Move o cursor para o final ao enviar novos comandos.
-      (setq-local comint-scroll-to-bottom-on-input t)
-      ;; Move o cursor para o final quando o Python retorna texto.
-      (setq-local comint-scroll-to-bottom-on-output t)
-      ;; Garante que o ponto (cursor) acompanhe a rolagem.
-      (setq-local comint-move-point-for-output t)))
+          (lambda ()
+            ;; Move cursor to end when sending new commands.
+            (setq-local comint-scroll-to-bottom-on-input t)
+            ;; Move cursor to end when Python returns text.
+            (setq-local comint-scroll-to-bottom-on-output t)
+            ;; Ensure point (cursor) follows scrolling.
+            (setq-local comint-move-point-for-output t)))
 
-;; ---- Integração Conda & LSP -----------------------------------------
+;;----- Conda & LSP Integration ----------------------------------------
 (use-package! conda
-    :init
-    ;; Caminhos para sua instalação do Anaconda.
-    (setq conda-anaconda-home (expand-file-name "~/anaconda3")
-          conda-env-home-directory (expand-file-name "~/anaconda3"))
-    :config
-    ;; Ativa o ambiente automaticamente se houver um environment.yml no projeto.
-    (conda-env-autoactivate-mode t)
+  :init
+  ;; Paths to your Anaconda installation.
+  (setq conda-anaconda-home wz-anaconda-root
+        conda-env-home-directory wz-anaconda-root)
+  :config
+  ;; Activate environment automatically if there's an environment.yml in the project.
+  (conda-env-autoactivate-mode t)
 
-    ;; Sincronização Crucial: Ao trocar de ambiente no Conda, o LSP
-    ;; e o Interpretador de Python devem se atualizar.
-    (add-hook 'conda-postactivate-hook
-              (lambda ()
-                  ;; Atualiza o interpretador para o Python do novo ambiente.
-                  (setq python-shell-interpreter
-                        (concat conda-env-current-path "/bin/python3"))
-                  ;; Reinicia o LSP para ler as bibliotecas do novo ambiente.
-                  ;; (lsp-restart-workspace)
-                  (sp-workspace-restart))))
+  ;; Critical Synchronization: When switching Conda environments, the LSP
+  ;; and Python Interpreter must update.
+  (add-hook 'conda-postactivate-hook
+            (lambda ()
+              ;; Update interpreter to the new environment's Python.
+              (setq python-shell-interpreter
+                    (concat conda-env-current-path wz-anaconda-python-bin))
+              ;; Restart LSP to read the new environment's libraries.
+              ;; (lsp-restart-workspace)
+              (sp-workspace-restart))))
 
-;; ---- Ajustes de Interface do Python ---------------------------------
+;;----- Python Interface Adjustments -----------------------------------
 (after! lsp-pyright
-    ;; Configurações do servidor Pyright (padrão Microsoft/VS Code).
-    (setq lsp-pyright-python-executable-cmd
-          (expand-file-name "~/anaconda3/bin/python3"))
-    (setq lsp-pyright-multi-root nil))
+  ;; Pyright server settings (Microsoft/VS Code default).
+  (setq lsp-pyright-python-executable-cmd wz-anaconda-python)
+  (setq lsp-pyright-multi-root nil))
+
 
 ;;----------------------------------------------------------------------
 ;; 7. AI & Code Assistance
