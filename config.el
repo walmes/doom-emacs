@@ -289,9 +289,16 @@
       (message "Screenshot saved as: %s" final-path))))
 
 ;;--- Org Mode & Presentation ------------------------------------------
+
+(setq visual-fill-column-center-text t)
+
 (use-package! visual-fill-column
   :config
-  (setq visual-fill-column-center-text t))
+  (setq visual-fill-column-center-text t)
+  (add-hook! '(markdown-mode-hook
+              quarto-mode-hook
+              org-mode-hook)
+             #'visual-fill-column-mode))
 
 (use-package! org-present
   :config
