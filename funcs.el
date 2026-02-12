@@ -760,7 +760,7 @@
           cat(stringi::stri_escape_unicode(\"%s\"),
               \"\\n\") })\n"
       string) buf)
-    (wz-ess--replace-region-with-ess-output beg end buf nil 2)))
+    (wz-ess--replace-region-with-ess-output beg end buf nil 1)))
 
 (defun wz-ess-find-and-insert-namespace (beg end)
   "Preceds a function with its namespace, so `mean(x) -> stats::mean(x)'
