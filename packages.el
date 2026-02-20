@@ -37,6 +37,10 @@
 (package! all-the-icons-dired
   :recipe (:host github :repo "wyuenho/all-the-icons-dired"))
 
+;; https://github.com/rainstormstudio/nerd-icons-dired
+(package! nerd-icons-dired
+  :recipe (:host github :repo "rainstormstudio/nerd-icons-dired"))
+
 ;; Perfect Margin for centering windows.
 ;; https://github.com/mpwang/perfect-margin
 (package! perfect-margin)
