@@ -288,17 +288,31 @@
       (rename-file screenshot--tmp-file final-path t)
       (message "Screenshot saved as: %s" final-path))))
 
-;;--- Org Mode & Presentation ------------------------------------------
+;;--- Visual Fill Column -----------------------------------------------
 
 (setq visual-fill-column-center-text t)
+
+(defun wz-visual-fill-column-width-by-extension ()
+  "Set `visual-fill-column-width' for specific text/document extensions."
+  (when (bound-and-true-p visual-fill-column-mode)
+    (let ((ext (when buffer-file-name
+                 (downcase (file-name-extension buffer-file-name)))))
+      (setq-local visual-fill-column-width
+                  (if (member ext '("md" "rmd" "qmd" "tex" "rnw"))
+                      96
+                    nil)))))
 
 (use-package! visual-fill-column
   :config
   (setq visual-fill-column-center-text t)
+  (add-hook 'visual-fill-column-mode-hook
+            #'wz-visual-fill-column-width-by-extension)
   (add-hook! '(markdown-mode-hook
               quarto-mode-hook
               org-mode-hook)
              #'visual-fill-column-mode))
+
+;;--- Org Mode & Presentation ------------------------------------------
 
 (use-package! org-present
   :config
