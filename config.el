@@ -658,9 +658,10 @@
 ;;----------------------------------------------------------------------
 
 ;;--- GPTel ------------------------------------------------------------
-(use-package! gptel
-  :config
-  (setq! gptel-api-key (getenv "OPENAI_API_KEY_GPTEL")))
+;; ~/.bashrc: export OPENAI_API_KEY_GPTEL="your_api_key_here"
+;; (use-package! gptel
+;;   :config
+;;   (setq! gptel-api-key (getenv "OPENAI_API_KEY_GPTEL")))
 
 ;;--- Copilot ----------------------------------------------------------
 (use-package! copilot
