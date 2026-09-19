@@ -523,14 +523,7 @@
         (when (derived-mode-p 'ess-mode 'python-mode)
             (flycheck-mode -1))))
 
-;;--- Air (R Formatter & Language Server) -------------------------------
-;; Air: https://github.com/posit-dev/air
-;; Instalação: curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
-;;
-;; Se o executável `air' estiver disponível, desativa o `languageserver'
-;; (lsp-r) para evitar conflitos/duplicações e utiliza exclusivamente o Air
-;; como language server e formatador para o ESS R com format-on-save.
-;; Configura marcadores de projeto para o R no Projectile
+;;--- Projectile & LSP Project Roots -----------------------------------
 (after! projectile
   (add-to-list 'projectile-project-root-files ".Rproj")
   (add-to-list 'projectile-project-root-files ".here"))
@@ -542,24 +535,23 @@
   ;;    NUNCA englobando pastas pai como ~/Projects.
   (setq lsp-auto-guess-root t)
 
-  ;; Desativa file watchers excessivos (Air não depende de watchers)
+  ;; Desativa file watchers excessivos para evitar travamentos
   (setq lsp-enable-file-watchers nil)
 
-  (when (executable-find "air")
-    ;; Desativa o languageserver do R para que apenas o Air atue no buffer
-    (add-to-list 'lsp-disabled-clients 'lsp-r)
+  ;; Garante que lsp-r esteja ativo para símbolos (lsp-treemacs-symbols-toggle),
+  ;; navegação e documentação, deixando a formatação a cargo do Air CLI
+  (setq lsp-disabled-clients (delq 'lsp-r lsp-disabled-clients))
+  (setq lsp-format-buffer-on-save nil))
 
-    ;; Registra o Air como servidor LSP principal para ess-r-mode
-    (lsp-register-client
-     (make-lsp-client
-      :new-connection (lsp-stdio-connection '("air" "language-server"))
-      :major-modes '(ess-r-mode)
-      :server-id 'lsp-r-air))
-
-    ;; Habilita format-on-save exclusivamente para buffers R
-    (setq-default lsp-format-buffer-on-save t)
-    (setq-hook! 'ess-r-mode-hook lsp-format-buffer-on-save t)
-    (add-to-list 'lsp-format-buffer-on-save-list 'ess-r-mode)))
+;;--- Air (R Formatter CLI) --------------------------------------------
+;; Air: https://github.com/posit-dev/air
+;; Implementação das funções no `funcs.el' (Seção 4. R / ESS).
+;; Toggle interativo: M-x air-lsp-format-on-save-toggle (ou air-format-on-save-toggle).
+;; Valor inicial configurado em `custom.el' (`wz-air-format-on-save').
+(when (executable-find "air")
+  (add-hook! 'ess-r-mode-hook
+    (make-local-variable 'wz-air-format-on-save)
+    (add-hook 'before-save-hook #'wz-air-format-on-save-maybe nil t)))
 
 
 ;;--- Electric Spacing (R) ---------------------------------------------

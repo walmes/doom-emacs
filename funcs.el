@@ -911,6 +911,69 @@
                 (insert "#'")))
             (forward-line 1)))))))
 
+;; --- Air Formatter (R) ---
+
+(defcustom wz-air-format-on-save t
+  "Se não-nil, formata buffers R automaticamente ao salvar usando o Air CLI.
+Pode ser customizado no `custom.el' ou via M-x customize-variable."
+  :type 'boolean
+  :group 'ess-r)
+
+(defun wz-air-format-buffer ()
+  "Formata o buffer R atual usando `air format` via stdin.
+Retorna t se a formatação foi aplicada com sucesso, nil caso contrário.
+Se o executável `air` não estiver disponível, a execução não gera erros."
+  (interactive)
+  (when (and (derived-mode-p 'ess-r-mode)
+             (executable-find "air"))
+    (let* ((file-path (or (buffer-file-name) "temp.R"))
+           (tmp-buffer (generate-new-buffer " *air-formatted*"))
+           (exit-code nil))
+      (unwind-protect
+          (progn
+            (setq exit-code
+                  (call-process-region (point-min) (point-max)
+                                       "air"
+                                       nil (list tmp-buffer nil) nil
+                                       "format"
+                                       "--stdin-file-path" file-path))
+            (if (= exit-code 0)
+                (progn
+                  (replace-buffer-contents tmp-buffer)
+                  t)
+              (message "[Air] Formatação ignorada (código inválido ou erro de sintaxe).")
+              nil))
+        (kill-buffer tmp-buffer)))))
+
+(defun wz-air-format-on-save-maybe ()
+  "Executa `wz-air-format-buffer` no salvamento somente se `wz-air-format-on-save`
+for t e o executável `air` estiver presente no sistema."
+  (when (and wz-air-format-on-save (executable-find "air"))
+    (wz-air-format-buffer)))
+
+;;;###autoload
+(defun air-lsp-format-on-save-toggle (&optional global)
+  "Alterna a formatação automática com Air ao salvar o buffer R.
+Por padrão, altera apenas no buffer atual.
+Com prefixo C-u (GLOBAL), altera o padrão global para todos os buffers R.
+Informa se o executável `air` estiver ausente."
+  (interactive "P")
+  (if (not (executable-find "air"))
+      (message "[Air] Aviso: O executável 'air' não foi encontrado no sistema.")
+    (if global
+        (progn
+          (setq-default wz-air-format-on-save (not (default-value 'wz-air-format-on-save)))
+          (setq wz-air-format-on-save (default-value 'wz-air-format-on-save))
+          (message "[Air] Format-on-save GLOBAL: %s"
+                   (if (default-value 'wz-air-format-on-save) "ATIVADO (t)" "DESATIVADO (nil)")))
+      (setq-local wz-air-format-on-save (not wz-air-format-on-save))
+      (message "[Air] Format-on-save no BUFFER atual: %s"
+               (if wz-air-format-on-save "ATIVADO (t)" "DESATIVADO (nil)")))))
+
+;; Aliases amigáveis para busca no M-x
+(defalias 'air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
+(defalias 'wz-air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
+
 
 ;;----------------------------------------------------------------------
 ;; 5. LSP / Treemacs / Imenu
