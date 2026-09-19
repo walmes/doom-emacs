@@ -974,6 +974,76 @@ Warns if the `air` executable is missing."
 (defalias 'air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 (defalias 'wz-air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 
+;; --- Section & Function Navigation (R) ---
+
+(defconst wz-r-section-regexp
+  "^[ \t]*#+ +.*\\(?:----\\|====\\|####\\)\\s-*$"
+  "Regexp matching RStudio-style section headings.")
+
+(defconst wz-r-function-regexp
+  "^[ \t]*\\([[:alnum:]._]+\\)\\s-*\\(?:<-\\|=\\)\\s-*function\\s-*("
+  "Regexp matching top-level R function definitions.")
+
+(defun wz-r-next-section ()
+  "Jump to the next RStudio-style section heading."
+  (interactive)
+  (let ((origin (point)))
+    (forward-line 1)
+    (if (re-search-forward wz-r-section-regexp nil t)
+        (progn
+          (beginning-of-line)
+          (recenter-top-bottom)
+          (when (fboundp 'pulse-momentary-highlight-one-line)
+            (pulse-momentary-highlight-one-line))
+          (message "Section: %s" (string-trim (match-string 0))))
+      (goto-char origin)
+      (message "No next section found."))))
+
+(defun wz-r-previous-section ()
+  "Jump to the previous RStudio-style section heading."
+  (interactive)
+  (let ((origin (point)))
+    (beginning-of-line)
+    (if (re-search-backward wz-r-section-regexp nil t)
+        (progn
+          (beginning-of-line)
+          (recenter-top-bottom)
+          (when (fboundp 'pulse-momentary-highlight-one-line)
+            (pulse-momentary-highlight-one-line))
+          (message "Section: %s" (string-trim (match-string 0))))
+      (goto-char origin)
+      (message "No previous section found."))))
+
+(defun wz-r-next-function ()
+  "Jump to the next top-level R function definition."
+  (interactive)
+  (let ((origin (point)))
+    (forward-line 1)
+    (if (re-search-forward wz-r-function-regexp nil t)
+        (progn
+          (beginning-of-line)
+          (recenter-top-bottom)
+          (when (fboundp 'pulse-momentary-highlight-one-line)
+            (pulse-momentary-highlight-one-line))
+          (message "Function: %s()" (match-string 1)))
+      (goto-char origin)
+      (message "No next function found."))))
+
+(defun wz-r-previous-function ()
+  "Jump to the previous top-level R function definition."
+  (interactive)
+  (let ((origin (point)))
+    (beginning-of-line)
+    (if (re-search-backward wz-r-function-regexp nil t)
+        (progn
+          (beginning-of-line)
+          (recenter-top-bottom)
+          (when (fboundp 'pulse-momentary-highlight-one-line)
+            (pulse-momentary-highlight-one-line))
+          (message "Function: %s()" (match-string 1)))
+      (goto-char origin)
+      (message "No previous function found."))))
+
 
 ;;----------------------------------------------------------------------
 ;; 5. LSP / Treemacs / Imenu
@@ -1074,6 +1144,11 @@ Warns if the `air` executable is missing."
 
 (after! ess-mode
   (map! :map ess-mode-map
+        ;; Jump between RStudio-style sections and functions
+        "C-c ["       #'wz-r-previous-section
+        "C-c ]"       #'wz-r-next-section
+        "C-c {"       #'wz-r-previous-function
+        "C-c }"       #'wz-r-next-function
         "C-<escape>"  #'wz-ess-cancel-on-inferior-ess-buffer
         "<C-f1>"      #'wz-ess-open-html-documentation
         "<C-f4>"      #'wz-ess-insert-function-args
