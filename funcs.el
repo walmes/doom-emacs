@@ -1046,7 +1046,89 @@ Warns if the `air` executable is missing."
 
 
 ;;----------------------------------------------------------------------
-;; 5. LSP / Treemacs / Imenu
+;; 5. Python
+;;----------------------------------------------------------------------
+
+(defun wz-python--get-block-bounds ()
+  "Return (BEG . END) of the code block or paragraph at point."
+  (save-excursion
+    (skip-chars-forward " \t\n")
+    (unless (eobp)
+      (let* ((para-bounds (bounds-of-thing-at-point 'paragraph))
+             (beg (car para-bounds))
+             (end (cdr para-bounds))
+             (defun-end (save-excursion (python-nav-end-of-defun) (point)))
+             (block-end (save-excursion (python-nav-end-of-block) (point))))
+        (when (and (> defun-end beg) (> defun-end end))
+          (setq end defun-end))
+        (when (and (> block-end beg) (> block-end end))
+          (setq end block-end))
+        (let ((real-beg (save-excursion
+                          (goto-char beg)
+                          (skip-chars-forward " \t\n")
+                          (line-beginning-position)))
+              (real-end (save-excursion
+                          (goto-char end)
+                          (skip-chars-backward " \t\n")
+                          (line-end-position))))
+          (cons real-beg real-end))))))
+
+(defun wz-python-send-block-and-step ()
+  "Send current selection, compound block, or paragraph to Python shell and step forward.
+If the Python process is not running, start it and split window first."
+  (interactive)
+  (let ((proc (python-shell-get-process))
+        (cmd (python-shell-calculate-command)))
+    (unless proc
+      (save-selected-window
+        ;; The 't' splits the window. 'save-selected-window' preserves focus in the editor.
+        (run-python cmd nil t)
+        (setq proc (python-shell-get-process))
+        ;; Wait briefly for Python initialization.
+        (accept-process-output proc 0.5)))
+
+    (if (use-region-p)
+        (let ((end (region-end)))
+          (python-shell-send-region (region-beginning) end)
+          (goto-char end)
+          (deactivate-mark)
+          (forward-line 1)
+          (skip-chars-forward " \t\n"))
+      (let ((bounds (wz-python--get-block-bounds)))
+        (if bounds
+            (progn
+              (python-shell-send-region (car bounds) (cdr bounds))
+              (goto-char (cdr bounds))
+              (forward-line 1)
+              (skip-chars-forward " \t\n"))
+          (forward-line 1))))))
+
+(defun wz-python-send-line-and-step ()
+  "Send current line to Python shell and move to next."
+  (interactive)
+  (let ((proc (python-shell-get-process))
+        (cmd (python-shell-calculate-command)))
+    (unless proc
+      (save-selected-window
+        (run-python cmd nil t)
+        (setq proc (python-shell-get-process))
+        (accept-process-output proc 0.5)))
+    (if (use-region-p)
+        (let ((end (region-end)))
+          (python-shell-send-region (region-beginning) end)
+          (goto-char end)
+          (deactivate-mark)
+          (forward-line 1)
+          (skip-chars-forward " \t\n"))
+      (let ((beg (line-beginning-position))
+            (end (line-end-position)))
+        (python-shell-send-region beg end)
+        (forward-line 1)
+        (skip-chars-forward " \t\n")))))
+
+
+;;----------------------------------------------------------------------
+;; 6. LSP / Treemacs / Imenu
 ;;----------------------------------------------------------------------
 
 ;; Already defined in LSP: "<f8>"
@@ -1069,7 +1151,7 @@ Warns if the `air` executable is missing."
            (other-window -1))))
 
 ;;----------------------------------------------------------------------
-;; 6. Themes
+;; 7. Themes
 ;;----------------------------------------------------------------------
 
 (defvar wz-theme-list '(doom-one
@@ -1092,7 +1174,7 @@ Warns if the `air` executable is missing."
 
 
 ;;----------------------------------------------------------------------
-;; 7. Keybindings
+;; 8. Keybindings
 ;;----------------------------------------------------------------------
 
 ;; ---- Global shortcuts (available in all modes) ----------------------
@@ -1165,6 +1247,24 @@ Warns if the `air` executable is missing."
         "<backtab>"   #'wz-ess-one-argument-by-line-and-indent-region
         "C-M-|"       #'wz-ess-indent-region-with-formatR-tidy-source
         "C-?"         #'wz-ess-stringi-escape-unicode))
+
+;; ---- Python-specific shortcuts --------------------------------------
+
+(after! python
+  (map! :map python-mode-map
+        ;; Universal execution shortcuts (VS Code style block/paragraph send).
+        "C-<return>" #'wz-python-send-block-and-step
+        "S-<return>" #'wz-python-send-block-and-step
+        "M-<return>" #'wz-python-send-line-and-step
+
+        ;; Shortcuts with Local-Leader (C-c C-z, C-c C-r, etc).
+        :localleader
+        "z" #'python-shell-switch-to-shell  ; Switch between script and terminal.
+        "p" #'wz-python-send-block-and-step ; Send paragraph/block.
+        "l" #'wz-python-send-line-and-step  ; Send single line.
+        "r" #'python-shell-send-region      ; Send selected block.
+        "b" #'python-shell-send-buffer      ; Send entire file.
+        "f" #'python-shell-send-defun))     ; Send current function.
 
 ;;----------------------------------------------------------------------
 

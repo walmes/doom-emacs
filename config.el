@@ -570,23 +570,62 @@
 (use-package! quarto-mode)
 
 ;;--- Python -----------------------------------------------------------
-;; NOTE: Doom has a `(python +lsp +conda +pyright)` module that handles
-;; much of this. Please ensure you have enabled it in `init.el`.
+;; Requirements & setup for a VS Code / Antigravity equivalent experience:
+;;
+;; 1. Doom Module (`init.el'):
+;;    Enable `(python +lsp +conda +pyright)` in `~/.doom.d/init.el' and run
+;;    `doom sync' in terminal.
+;;
+;; 2. Language Server & Tooling (Pyright & Ruff):
+;;    Pyright powers Microsoft's Pylance in VS Code and Antigravity.
+;;    Install in your Anaconda base or virtual environment:
+;;      $ conda activate base
+;;      $ pip install pyright ruff
+;;    Ensure executables are visible on PATH (or symlinked into ~/.local/bin):
+;;      $ ln -sf ~/anaconda3/bin/pyright* ~/.local/bin/
+;;      $ ln -sf ~/anaconda3/bin/ruff ~/.local/bin/
+;;
+;; 3. Python 3.13+ REPL Compatibility:
+;;    Python 3.13+ defaults to `PyREPL', which can cause conflicts with Emacs
+;;    comint buffers. `PYTHON_BASIC_REPL=1' is set below to ensure smooth REPL.
+;;
+;; 4. Interactive REPL Workflow (matching VS Code Shift+Enter / Smart Send):
+;;    - `C-<return>' / `S-<return>' : Smart send block/paragraph & step forward.
+;;    - `M-<return>'               : Send strictly current line & step.
+;;    - `SPC m z' / `, z'          : Switch between editor and Python REPL.
+;;    - `SPC m p' / `, p'          : Send current block/paragraph.
+;;    - `SPC m l' / `, l'          : Send single line.
+;;    - `SPC m r' / `, r'          : Send selected region.
+;;    - `SPC m b' / `, b'          : Send entire buffer.
+;;    - `SPC m f' / `, f'          : Send current function (`def`).
+;;    - `M-x conda-env-activate'   : Switch Conda virtual environment.
+;;    - `M-x lsp-workspace-restart': Restart LSP server after switching envs.
 
-;;$ source ~/anaconda3/bin/activate
-;;$ conda activate base
-;;$ pip install pyright
+(defvar wz-anaconda-root
+  (cl-find-if #'file-directory-p
+              (list (expand-file-name "~/anaconda3")
+                    (expand-file-name "~/miniconda3")
+                    (expand-file-name "~/.conda")))
+  "Root directory for Anaconda or Miniconda installation if present.")
 
-;; Install LSP: `M-x lsp-install-server'.
-;; Activate a conda virtual environment: `M-x conda-env-activate'.
-;; Open Python REPL: `M-x run-python'.
+(defvar wz-anaconda-python
+  (or (and wz-anaconda-root
+           (let ((bin (expand-file-name "bin/python3" wz-anaconda-root)))
+             (and (file-executable-p bin) bin)))
+      (executable-find "python3")
+      (executable-find "python")
+      "python3")
+  "Absolute path to the Python executable (Anaconda if present, or system python).")
 
-(defvar wz-anaconda-root (expand-file-name "~/anaconda3")
-  "Root directory for the Anaconda installation.")
-(defvar wz-anaconda-python (expand-file-name "~/anaconda3/bin/python3")
-  "Absolute path to the Anaconda Python executable.")
 (defvar wz-anaconda-python-bin "/bin/python3"
   "Relative Python executable path inside a conda environment.")
+
+;; Ensure Anaconda bin directory is in exec-path and PATH for Emacs if it exists.
+(when wz-anaconda-root
+  (let ((anaconda-bin (expand-file-name "bin" wz-anaconda-root)))
+    (when (file-directory-p anaconda-bin)
+      (add-to-list 'exec-path anaconda-bin)
+      (setenv "PATH" (concat anaconda-bin ":" (getenv "PATH"))))))
 
 (after! python
   ;; 1. Force interactive mode to ensure echo.
@@ -599,46 +638,7 @@
   ;; (setenv "TERM" "dumb")
 
   ;; Set the default Anaconda interpreter.
-  (setq python-shell-interpreter wz-anaconda-python)
-
-  ;; Function: Send line and step to next (R-style Ctrl+Enter).
-  ;; (defun wz-python-send-line-and-step ()
-  ;;   "Send current line to Python shell and move to next."
-  ;;   (interactive)
-  ;;   (python-shell-send-statement)
-  ;;   (forward-line 1))
-
-  (defun wz-python-send-line-and-step ()
-    "Send line to Python. Open process if it doesn't exist, split window
-     and ensure correct initialization."
-    (interactive)
-    (let ((proc (python-shell-get-process))
-          (cmd (python-shell-calculate-command))) ; Use Anaconda path defined in config
-      (unless proc
-        (save-selected-window
-          ;; The 't' does the split. 'save-selected-window' returns focus.
-          (run-python cmd nil t)
-          (setq proc (python-shell-get-process))
-          ;; Synchronization: Wait 0.5s for Python to load
-          ;; Emacs internal functions (__PYTHON_EL_eval)
-          (accept-process-output proc 0.5)))
-
-      ;; Send code and jump to next line.
-      (python-shell-send-statement)
-      (forward-line 1)))
-
-  ;; Key Mapping (For Leader/Emacs-style users).
-  (map! :map python-mode-map
-        ;; Universal execution shortcut.
-        "C-<return>" #'wz-python-send-line-and-step
-
-        ;; Shortcuts with Local-Leader (C-c C-z, C-c C-r, etc).
-        :localleader
-        "z" #'python-shell-switch-to-shell  ; Switch between script and terminal.
-        "r" #'python-shell-send-region      ; Send selected block.
-        "b" #'python-shell-send-buffer      ; Send entire file.
-        "f" #'python-shell-send-defun)      ; Send current function.
-  )
+  (setq python-shell-interpreter wz-anaconda-python))
 
 (add-hook! python-mode
            ;; Local variable settings
@@ -659,6 +659,7 @@
 
 ;;----- Conda & LSP Integration ----------------------------------------
 (use-package! conda
+  :when wz-anaconda-root
   :init
   ;; Paths to your Anaconda installation.
   (setq conda-anaconda-home wz-anaconda-root
