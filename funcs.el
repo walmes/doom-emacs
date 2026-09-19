@@ -914,15 +914,15 @@
 ;; --- Air Formatter (R) ---
 
 (defcustom wz-air-format-on-save t
-  "Se não-nil, formata buffers R automaticamente ao salvar usando o Air CLI.
-Pode ser customizado no `custom.el' ou via M-x customize-variable."
+  "If non-nil, automatically format R buffers on save using Air CLI.
+Can be customized in `custom.el' or via M-x customize-variable."
   :type 'boolean
   :group 'ess-r)
 
 (defun wz-air-format-buffer ()
-  "Formata o buffer R atual usando `air format` via stdin.
-Retorna t se a formatação foi aplicada com sucesso, nil caso contrário.
-Se o executável `air` não estiver disponível, a execução não gera erros."
+  "Format the current R buffer using `air format` via stdin.
+Return t if formatting was applied successfully, nil otherwise.
+Does not fail if the `air` executable is unavailable."
   (interactive)
   (when (and (derived-mode-p 'ess-r-mode)
              (executable-find "air"))
@@ -941,36 +941,36 @@ Se o executável `air` não estiver disponível, a execução não gera erros."
                 (progn
                   (replace-buffer-contents tmp-buffer)
                   t)
-              (message "[Air] Formatação ignorada (código inválido ou erro de sintaxe).")
+              (message "[Air] Formatting skipped due to syntax/parsing errors.")
               nil))
         (kill-buffer tmp-buffer)))))
 
 (defun wz-air-format-on-save-maybe ()
-  "Executa `wz-air-format-buffer` no salvamento somente se `wz-air-format-on-save`
-for t e o executável `air` estiver presente no sistema."
+  "Execute `wz-air-format-buffer` on save if `wz-air-format-on-save`
+is non-nil and the `air` executable is available on system PATH."
   (when (and wz-air-format-on-save (executable-find "air"))
     (wz-air-format-buffer)))
 
 ;;;###autoload
 (defun air-lsp-format-on-save-toggle (&optional global)
-  "Alterna a formatação automática com Air ao salvar o buffer R.
-Por padrão, altera apenas no buffer atual.
-Com prefixo C-u (GLOBAL), altera o padrão global para todos os buffers R.
-Informa se o executável `air` estiver ausente."
+  "Toggle automatic formatting on save with Air in R buffers.
+By default, toggles only for the current buffer.
+With prefix argument C-u (GLOBAL), toggles the global default for all R buffers.
+Warns if the `air` executable is missing."
   (interactive "P")
   (if (not (executable-find "air"))
-      (message "[Air] Aviso: O executável 'air' não foi encontrado no sistema.")
+      (message "[Air] Warning: 'air' executable was not found on system PATH.")
     (if global
         (progn
           (setq-default wz-air-format-on-save (not (default-value 'wz-air-format-on-save)))
           (setq wz-air-format-on-save (default-value 'wz-air-format-on-save))
           (message "[Air] Format-on-save GLOBAL: %s"
-                   (if (default-value 'wz-air-format-on-save) "ATIVADO (t)" "DESATIVADO (nil)")))
+                   (if (default-value 'wz-air-format-on-save) "ENABLED (t)" "DISABLED (nil)")))
       (setq-local wz-air-format-on-save (not wz-air-format-on-save))
-      (message "[Air] Format-on-save no BUFFER atual: %s"
-               (if wz-air-format-on-save "ATIVADO (t)" "DESATIVADO (nil)")))))
+      (message "[Air] Format-on-save for current BUFFER: %s"
+               (if wz-air-format-on-save "ENABLED (t)" "DISABLED (nil)")))))
 
-;; Aliases amigáveis para busca no M-x
+;; Friendly aliases for M-x discovery
 (defalias 'air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 (defalias 'wz-air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 

@@ -486,7 +486,7 @@
   (add-hook
    'ess-mode-hook
    '(lambda ()
-      ;; OBSOLETO: Não carregar ess-site para evitar carregar o pacote deprecado ess-jags-d
+      ;; OBSOLETE: Do not load ess-site to avoid loading deprecated package ess-jags-d
       (require 'ess-view-data)
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
@@ -529,25 +529,25 @@
   (add-to-list 'projectile-project-root-files ".here"))
 
 (after! lsp-mode
-  ;; Restringe a raiz do LSP automaticamente:
-  ;; 1. Se estiver num repositório Git/Projectile, usa a raiz desse projeto.
-  ;; 2. Se NÃO for projeto Git, usa o diretório do próprio arquivo (default-directory),
-  ;;    NUNCA englobando pastas pai como ~/Projects.
+  ;; Automatically restrict LSP workspace root:
+  ;; 1. If inside a Git/Projectile repository, use project root.
+  ;; 2. If NOT a Git project, use the file's own directory (default-directory),
+  ;;    never encompassing broad parent folders such as ~/Projects.
   (setq lsp-auto-guess-root t)
 
-  ;; Desativa file watchers excessivos para evitar travamentos
+  ;; Disable excessive file watchers to prevent sluggishness
   (setq lsp-enable-file-watchers nil)
 
-  ;; Garante que lsp-r esteja ativo para símbolos (lsp-treemacs-symbols-toggle),
-  ;; navegação e documentação, deixando a formatação a cargo do Air CLI
+  ;; Ensure standard lsp-r remains active for symbols (lsp-treemacs-symbols-toggle),
+  ;; navigation, and documentation, delegating formatting on save to Air CLI
   (setq lsp-disabled-clients (delq 'lsp-r lsp-disabled-clients))
   (setq lsp-format-buffer-on-save nil))
 
 ;;--- Air (R Formatter CLI) --------------------------------------------
 ;; Air: https://github.com/posit-dev/air
-;; Implementação das funções no `funcs.el' (Seção 4. R / ESS).
-;; Toggle interativo: M-x air-lsp-format-on-save-toggle (ou air-format-on-save-toggle).
-;; Valor inicial configurado em `custom.el' (`wz-air-format-on-save').
+;; Functions implemented in `funcs.el' (Section 4. R / ESS).
+;; Interactive toggle: M-x air-lsp-format-on-save-toggle (or air-format-on-save-toggle).
+;; Initial default value configured in `custom.el' (`wz-air-format-on-save').
 (when (executable-find "air")
   (add-hook! 'ess-r-mode-hook
     (make-local-variable 'wz-air-format-on-save)
