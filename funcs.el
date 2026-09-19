@@ -221,6 +221,13 @@
     (beginning-of-line)
     (looking-at-p "^[[:space:]]*$")))
 
+(defun wz-comment-start ()
+  "Return the comment delimiter for starting a comment line, without
+   trailing whitespace."
+  (if comment-start
+      (string-trim-right (comment-padright comment-start (or comment-add 0)))
+    "#"))
+
 (defun wz-insert-rule-from-point-to-margin (&optional char)
   "Insert a commented rule from `point' to `fill-column'. If the line is
    blank, it starts a comment. Useful to divide code into sections."
@@ -229,7 +236,7 @@
     (if (wz-blank-line-p)
         (progn
           (indent-according-to-mode)
-          (insert comment-start)))
+          (insert (wz-comment-start))))
     (let ((count (max 0 (- fill-column (current-column)))))
       (insert (make-string count char)))
     (beginning-of-line)
@@ -243,7 +250,7 @@
   (if (wz-blank-line-p)
       (progn
         (indent-according-to-mode)
-        (insert comment-start)))
+        (insert (wz-comment-start))))
   (let* ((column-middle (floor (* 0.625 fill-column)))
          (count (max 0 (- column-middle (current-column)))))
     (insert (make-string count ?-))))
@@ -253,13 +260,13 @@
   (insert "\n" text)
   (comment-region (line-beginning-position) (point)))
 
-(defun wz-right-align-commented-text (text comment-char-size)
+(defun wz-right-align-commented-text (text &optional comment-char-size)
   "Write TEXT aligned to the right margin at `fill-column' and comment
    it out."
   (insert "\n" text)
   (comment-region (line-beginning-position) (point))
   (backward-char (length text))
-  (let ((spaces (- fill-column (length text) comment-char-size)))
+  (let ((spaces (- fill-column (length text) (current-column))))
     (when (> spaces 0)
       (insert (make-string spaces ?\s))))
   (forward-char (length text)))
@@ -335,7 +342,7 @@
       ;; Calculate the size of the comment prefix in the current buffer.
       ;; This is necessary for the right alignment function.
       (let ((comment-char-size
-             (- (+ fill-column 2)
+             (- (+ fill-column 1)
                 (how-many comment-char-str
                           (line-beginning-position)
                           (point)
