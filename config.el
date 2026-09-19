@@ -767,39 +767,62 @@
   ("C-c l n" . hl-todo-next)
   :config
   (global-hl-todo-mode t)
+
+  ;; High-contrast solid badge for personal WALMES marker (warning fill, canvas text)
+  (defface wz-hl-todo-walmes
+    '((t :inherit warning
+         :inverse-video t
+        ;; :box (:line-width -1 :style nil)
+         :weight bold))
+    "High-contrast badge face for WALMES keyword in hl-todo, dynamically derived from theme."
+    :group 'hl-todo)
+
   (setq hl-todo-keyword-faces
-        (append hl-todo-keyword-faces
-                '(("IMPROVE"     . font-lock-constant-face)
-                  ("QUESTION"    . font-lock-constant-face)
-                  ("EXPLANATION" . font-lock-constant-face)
-                  ("THEORY"      . font-lock-constant-face)
-                  ("DESCRIPTION" . font-lock-keyword-face)
-                  ("COMMENT"     . font-lock-keyword-face)
-                  ("TIP"         . font-lock-keyword-face)
-                  ("TRICK"       . font-lock-keyword-face)
-                  ("INFO"        . font-lock-keyword-face)
-                  ("INFORMATION" . font-lock-keyword-face)
-                  ("DANGER"      . error)
-                  ("STOP"        . error)
-                  ("FAIL"        . error)
-                  ("WARNING"     . error)
-                  ("ERROR"       . error)
-                  ("BUG"         . error)
-                  ("DEBUG"       . warning)
-                  ("IMPORTANT"   . warning)
-                  ("ATTENTION"   . warning)
-                  ("CAUTION"     . warning)
-                  ("REVIEW"      . warning)
-                  ("OBS"         . warning)
-                  ("PROBLEM"     . warning)
-                  ("DISCLAIMER"  . warning)
-                  ("EXERCISE"    . warning)
-                  ("BONUS"       . success)
-                  ("DONE"        . success)
-                  ("OKAY"        . success)
-                  ("GOOD"        . success)
-                  ("SOLVED"      . success)
-                  ("OPTIONAL"    . success)))))
+        '(;; 1. Identity / Personal Marker
+          ("WALMES"      . wz-hl-todo-walmes)
+
+          ;; 2. Critical Errors / Blockers (Red)
+          ("ERROR"       . error)
+          ("BUG"         . error)
+          ("FAIL"        . error)
+          ("DANGER"      . error)
+          ("STOP"        . error)
+          ("FIXME"       . error)
+
+          ;; 3. Warnings / Review / Attention / Performance (Yellow / Amber)
+          ("WARNING"     . warning)
+          ("CAUTION"     . warning)
+          ("ATTENTION"   . warning)
+          ("IMPORTANT"   . warning)
+          ("REVIEW"      . warning)
+          ("PROBLEM"     . warning)
+          ("OBS"         . warning)
+          ("SLOW"        . warning)
+
+          ;; 4. To Do / Work In Progress (Orange / Bold)
+          ("TODO"        warning bold)
+          ("WIP"         warning bold)
+          ("HACK"        warning bold)
+          ("DEBUG"       warning bold)
+
+          ;; 5. Educational / Teaching / Theory (Cyan / Constant Face)
+          ("EXERCISE"    . font-lock-constant-face)
+          ("QUESTION"    . font-lock-constant-face)
+          ("THEORY"      . font-lock-constant-face)
+          ("IMPROVE"     . font-lock-constant-face)
+
+          ;; 6. Tips & Informational Notes (Doc Face / Soft Blue)
+          ("NOTE"        . font-lock-doc-face)
+          ("INFO"        . font-lock-doc-face)
+          ("TIP"         . font-lock-doc-face)
+          ("TRICK"       . font-lock-doc-face)
+          ("EXPLANATION" . font-lock-doc-face)
+
+          ;; 7. Success / Completed (Green)
+          ("DONE"        . success)
+          ("SOLVED"      . success)
+          ("OKAY"        . success)
+          ("BONUS"       . success))))
 
 ;; HL-Prog-Extra
 (use-package! hl-prog-extra
