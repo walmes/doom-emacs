@@ -486,7 +486,7 @@
   (add-hook
    'ess-mode-hook
    '(lambda ()
-      (require 'ess-site)
+      ;; OBSOLETO: Não carregar ess-site para evitar carregar o pacote deprecado ess-jags-d
       (require 'ess-view-data)
       (setq ess-smart-operators t)
       (setq-local comment-add 0) ;; Single # as default.
@@ -522,6 +522,45 @@
         "Disable flycheck in LSP only for R (ESS) and Python."
         (when (derived-mode-p 'ess-mode 'python-mode)
             (flycheck-mode -1))))
+
+;;--- Air (R Formatter & Language Server) -------------------------------
+;; Air: https://github.com/posit-dev/air
+;; Instalação: curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
+;;
+;; Se o executável `air' estiver disponível, desativa o `languageserver'
+;; (lsp-r) para evitar conflitos/duplicações e utiliza exclusivamente o Air
+;; como language server e formatador para o ESS R com format-on-save.
+;; Configura marcadores de projeto para o R no Projectile
+(after! projectile
+  (add-to-list 'projectile-project-root-files ".Rproj")
+  (add-to-list 'projectile-project-root-files ".here"))
+
+(after! lsp-mode
+  ;; Restringe a raiz do LSP automaticamente:
+  ;; 1. Se estiver num repositório Git/Projectile, usa a raiz desse projeto.
+  ;; 2. Se NÃO for projeto Git, usa o diretório do próprio arquivo (default-directory),
+  ;;    NUNCA englobando pastas pai como ~/Projects.
+  (setq lsp-auto-guess-root t)
+
+  ;; Desativa file watchers excessivos (Air não depende de watchers)
+  (setq lsp-enable-file-watchers nil)
+
+  (when (executable-find "air")
+    ;; Desativa o languageserver do R para que apenas o Air atue no buffer
+    (add-to-list 'lsp-disabled-clients 'lsp-r)
+
+    ;; Registra o Air como servidor LSP principal para ess-r-mode
+    (lsp-register-client
+     (make-lsp-client
+      :new-connection (lsp-stdio-connection '("air" "language-server"))
+      :major-modes '(ess-r-mode)
+      :server-id 'lsp-r-air))
+
+    ;; Habilita format-on-save exclusivamente para buffers R
+    (setq-default lsp-format-buffer-on-save t)
+    (setq-hook! 'ess-r-mode-hook lsp-format-buffer-on-save t)
+    (add-to-list 'lsp-format-buffer-on-save-list 'ess-r-mode)))
+
 
 ;;--- Electric Spacing (R) ---------------------------------------------
 (use-package! electric-spacing-r
@@ -633,8 +672,8 @@
   (setq conda-anaconda-home wz-anaconda-root
         conda-env-home-directory wz-anaconda-root)
   :config
-  ;; Activate environment automatically if there's an environment.yml in the project.
-  (conda-env-autoactivate-mode t)
+  ;; Ativa o ambiente Conda automaticamente APENAS para arquivos Python
+  (add-hook 'python-mode-hook #'conda-env-activate-for-buffer)
   ;; Critical Synchronization: When switching Conda environments, the LSP
   ;; and Python Interpreter must update.
   (add-hook 'conda-postactivate-hook
@@ -643,8 +682,7 @@
               (setq python-shell-interpreter
                     (concat conda-env-current-path wz-anaconda-python-bin))
               ;; Restart LSP to read the new environment's libraries.
-              ;; (lsp-restart-workspace)
-              (sp-workspace-restart))))
+              (lsp-workspace-restart))))
 
 ;;----- Python Interface Adjustments -----------------------------------
 (after! lsp-pyright
