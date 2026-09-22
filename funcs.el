@@ -769,22 +769,327 @@
       string) buf)
     (wz-ess--replace-region-with-ess-output beg end buf nil 1)))
 
-(defun wz-ess-find-and-insert-namespace (beg end)
-  "Preceds a function with its namespace, so `mean(x) -> stats::mean(x)'
-   and `xyplot(...) -> lattice::xyplot()'. Call this function in a R
-   major mode buffer with the function name selected."
-  (interactive "r")
-  (let ((string (wz-ess--region-to-escaped-string beg end))
-        (buf (get-buffer-create "*ess-command-output*")))
+;; --- ESS Namespace Automation ----------------------------------------
+
+(defcustom wz-ess-namespace-ambiguity-action 'ask
+  "Action to take when a function is found in multiple packages on the R `search()' path.
+Options:
+  'ask    - Prompt the user with `completing-read', with the first (shadowing)
+            package as default.
+  'first  - Automatically use the first package on the search path.
+  'ignore - Skip and do not insert any namespace.
+  'all    - Insert all packages separated by space (legacy behavior)."
+  :type '(choice (const :tag "Ask which package with completing-read" ask)
+                 (const :tag "Use first package on search path" first)
+                 (const :tag "Skip / do nothing" ignore)
+                 (const :tag "Insert all packages separated by space" all))
+  :group 'ess-r)
+
+(defcustom wz-ess-namespace-ignored-packages '("base")
+  "List of R packages whose functions should not be prefixed with a namespace.
+By default includes \"base\" so that standard functions like `c()', `list()',
+`data.frame()', and `length()' are not prefixed with `base::'."
+  :type '(repeat string)
+  :group 'ess-r)
+
+(defcustom wz-ess-namespace-ignored-functions
+  '("if" "for" "while" "repeat" "function" "return" "switch" "in" "else" "break" "next")
+  "List of R keywords and control-flow symbols to never prefix with a namespace."
+  :type '(repeat string)
+  :group 'ess-r)
+
+(defun wz-ess--lookup-namespaces-batch (funcs)
+  "Query the active ESS R process for packages containing FUNCS.
+FUNCS is a list of function name strings.
+Returns a hash table mapping each function name to a list of package strings."
+  (let ((table (make-hash-table :test 'equal)))
+    (when (and funcs (fboundp 'ess-command))
+      (let* ((buf (get-buffer-create "*ess-command-output*"))
+             (r-vector (concat "c("
+                               (mapconcat (lambda (f) (format "\"%s\"" f)) funcs ", ")
+                               ")"))
+             (r-code
+              (format
+               "local({
+                  funcs <- %s
+                  for (f in funcs) {
+                    p <- utils::find(f)
+                    pkgs <- sub('^package:', '', p[grepl('^package:', p)])
+                    if (length(pkgs) > 0) {
+                      cat(sprintf('__RES__:%%s:%%s\\n', f, paste(pkgs, collapse = ',')))
+                    }
+                  }
+                })\n"
+               r-vector)))
+        (ess-force-buffer-current "Process to load into:")
+        (ess-command r-code buf)
+        (with-current-buffer buf
+          (goto-char (point-min))
+          (while (re-search-forward "^__RES__:\\([^:]+\\):\\(.*\\)$" nil t)
+            (let ((fn (match-string 1))
+                  (pkgs (split-string (match-string 2) "," t)))
+              (puthash fn pkgs table))))))
+    table))
+
+(defun wz-ess-find-and-insert-namespace (&optional beg end action)
+  "Precede a function with its namespace (e.g. `filter -> dplyr::filter').
+If region is active, uses BEG and END. If no region is active, operates on
+the symbol at point.
+ACTION controls behavior when multiple packages export the function:
+  'ask    - Prompt user with `completing-read' (default)
+  'first  - Use the first package on the search path
+  'ignore - Do not insert namespace
+  'all    - Insert all packages separated by space (legacy behavior)
+If ACTION is nil, uses `wz-ess-namespace-ambiguity-action'."
+  (interactive
+   (if (use-region-p)
+       (list (region-beginning) (region-end) nil)
+     (when-let* ((bounds (bounds-of-thing-at-point 'symbol)))
+       (list (car bounds) (cdr bounds) nil))))
+  (unless (and beg end)
+    (user-error "[ESS] No symbol or region selected"))
+  (let* ((string (wz-ess--region-to-escaped-string beg end))
+         (act (or action wz-ess-namespace-ambiguity-action))
+         (buf (get-buffer-create "*ess-command-output*"))
+         (r-code
+          (format
+           "local({
+              x <- \"%s\"
+              p <- utils::find(x)
+              pkgs <- sub('^package:', '', p[grepl('^package:', p)])
+              if (length(pkgs) > 0) {
+                cat(sprintf('__RES__:%%s:%%s\\n', x, paste(pkgs, collapse = ',')))
+              }
+            })\n"
+           string))
+         (pkgs nil))
     (ess-force-buffer-current "Process to load into:")
-    (ess-command
-     (format
-      "local({
-           x <- \"%s\"
-           cat(paste0(sub('.*:', '', utils::find(x)), '::', x), \"\\n\")
-       })\n"
-      string) buf)
-    (wz-ess--replace-region-with-ess-output beg end buf nil 1)))
+    (ess-command r-code buf)
+    (with-current-buffer buf
+      (goto-char (point-min))
+      (when (re-search-forward "^__RES__:[^:]+:\\(.*\\)$" nil t)
+        (setq pkgs (split-string (match-string 1) "," t))))
+    (cond
+     ((null pkgs)
+      (message "[ESS] Function '%s' not found on R search() path." string))
+     ((= (length pkgs) 1)
+      (delete-region beg end)
+      (insert (format "%s::%s" (car pkgs) string)))
+     (t
+      (pcase act
+        ('first
+         (delete-region beg end)
+         (insert (format "%s::%s" (car pkgs) string)))
+        ('ignore
+         (message "[ESS] Skipped '%s' (found in multiple packages: %s)"
+                  string (mapconcat #'identity pkgs ", ")))
+        ('all
+         (delete-region beg end)
+         (insert (mapconcat (lambda (p) (format "%s::%s" p string)) pkgs " ")))
+        (_ ; 'ask
+         (let ((chosen (completing-read
+                        (format "Choose package for '%s' (default %s): " string (car pkgs))
+                        pkgs nil t nil nil (car pkgs))))
+           (when (and chosen (not (string= (string-trim chosen) "")))
+             (delete-region beg end)
+             (insert (format "%s::%s" chosen string))))))))))
+
+;;;###autoload
+(defun wz-ess-add-namespaces-in-region (&optional beg end action)
+  "Interactively add package namespaces to R function calls in the region.
+Uses a `query-replace' style interface:
+  `y' or `SPC' - add namespace to current function call
+  `n' or `DEL' - skip current function call
+  `!'          - add namespaces to all remaining function calls automatically
+  `q' or `ESC' - quit and report replacements
+If region is active, operates within it. Otherwise, operates within the
+current R function definition at point (or the entire buffer if at top level).
+ACTION overrides `wz-ess-namespace-ambiguity-action' when multiple packages
+export a function."
+  (interactive
+   (if (use-region-p)
+       (list (region-beginning) (region-end) nil)
+     (if-let* ((defun-bounds (bounds-of-thing-at-point 'defun)))
+         (list (car defun-bounds) (cdr defun-bounds) nil)
+       (list (point-min) (point-max) nil))))
+  (unless (and beg end (< beg end))
+    (user-error "[ESS] Invalid region"))
+  (save-excursion
+    (font-lock-ensure beg end)
+    (let ((candidate-names nil)
+          (act (or action wz-ess-namespace-ambiguity-action))
+          (fn-regex "\\_<\\([a-zA-Z0-9._]+\\)\\_>[ \t]*(")
+          (end-marker (copy-marker end t))
+          (replaced-count 0)
+          (auto-all nil)
+          (quit-requested nil)
+          (ov (make-overlay 1 1)))
+      (overlay-put ov 'face 'highlight)
+      ;; Pass 1: Scan region to collect unique function names
+      (goto-char beg)
+      (while (and (< (point) end-marker)
+                  (re-search-forward fn-regex end-marker t))
+        (let* ((fn (match-string-no-properties 1))
+               (fn-beg (match-beginning 1))
+               (next-pos (copy-marker (match-end 0) t))
+               (state (save-excursion (syntax-ppss fn-beg)))
+               (in-comment-or-str (or (nth 3 state) (nth 4 state)))
+               (preceded-by-ns
+                (save-excursion
+                  (goto-char fn-beg)
+                  (save-match-data
+                    (looking-back ":::?" (max (point-min) (- (point) 3))))))
+               (preceded-by-accessor
+                (save-excursion
+                  (goto-char fn-beg)
+                  (save-match-data
+                    (looking-back "[$@]" (max (point-min) (- (point) 1))))))
+               (is-keyword (member fn wz-ess-namespace-ignored-functions)))
+          (unless (or in-comment-or-str
+                      preceded-by-ns
+                      preceded-by-accessor
+                      is-keyword)
+            (push fn candidate-names))
+          (goto-char next-pos)
+          (set-marker next-pos nil)))
+      (setq candidate-names (delete-dups candidate-names))
+      (if (null candidate-names)
+          (message "[ESS] No candidate function calls found in region.")
+        ;; Query R for all collected candidate functions in one batch
+        (let ((pkg-table (wz-ess--lookup-namespaces-batch candidate-names)))
+          ;; Pass 2: Interactive replacement from beg to end-marker
+          (goto-char beg)
+          (while (and (not quit-requested)
+                      (< (point) end-marker)
+                      (re-search-forward fn-regex end-marker t))
+            (let* ((fn (match-string-no-properties 1))
+                   (fn-beg (match-beginning 1))
+                   (fn-end (match-end 1))
+                   (next-pos (copy-marker (match-end 0) t))
+                   (state (save-excursion (syntax-ppss fn-beg)))
+                   (in-comment-or-str (or (nth 3 state) (nth 4 state)))
+                   (preceded-by-ns
+                    (save-excursion
+                      (goto-char fn-beg)
+                      (save-match-data
+                        (looking-back ":::?" (max (point-min) (- (point) 3))))))
+                   (preceded-by-accessor
+                    (save-excursion
+                      (goto-char fn-beg)
+                      (save-match-data
+                        (looking-back "[$@]" (max (point-min) (- (point) 1))))))
+                   (is-keyword (member fn wz-ess-namespace-ignored-functions))
+                   (raw-pkgs (gethash fn pkg-table))
+                   (pkgs (let (res)
+                           (dolist (p raw-pkgs (nreverse res))
+                             (unless (member p wz-ess-namespace-ignored-packages)
+                               (push p res))))))
+              (unwind-protect
+                  (when (and (not in-comment-or-str)
+                             (not preceded-by-ns)
+                             (not preceded-by-accessor)
+                             (not is-keyword)
+                             pkgs)
+                    (let ((target-pkg nil)
+                          (insert-all-mode nil))
+                      ;; Determine which package to use
+                      (if (= (length pkgs) 1)
+                          (setq target-pkg (car pkgs))
+                        ;; Multiple packages available
+                        (pcase act
+                          ('first
+                           (setq target-pkg (car pkgs)))
+                          ('ignore
+                           (setq target-pkg nil))
+                          ('all
+                           (setq insert-all-mode t))
+                          (_ ; 'ask
+                           (if auto-all
+                               (setq target-pkg (car pkgs))
+                             (move-overlay ov fn-beg fn-end)
+                             (redisplay)
+                             (let ((chosen (completing-read
+                                            (format "Choose package for '%s' (default %s): " fn (car pkgs))
+                                            pkgs nil t nil nil (car pkgs))))
+                               (when (and chosen (not (string= (string-trim chosen) "")))
+                                 (setq target-pkg chosen)))))))
+                      (cond
+                       (insert-all-mode
+                        (move-overlay ov fn-beg fn-end)
+                        (redisplay)
+                        (if auto-all
+                            (progn
+                              (delete-region fn-beg fn-end)
+                              (goto-char fn-beg)
+                              (insert (mapconcat (lambda (p) (format "%s::%s" p fn)) pkgs " "))
+                              (setq replaced-count (1+ replaced-count)))
+                          (let ((prompt (format "Replace `%s' with all candidates [%s]? [y]es, [n]o, [!]all, [q]uit: "
+                                                fn (mapconcat #'identity pkgs " ")))
+                                (done-choice nil))
+                            (while (not done-choice)
+                              (let ((ch (read-char-choice prompt '(?y ?Y ?\s ?n ?N ?\d ?! ?q ?Q ?\e))))
+                                (cond
+                                 ((memq ch '(?y ?Y ?\s))
+                                  (delete-region fn-beg fn-end)
+                                  (goto-char fn-beg)
+                                  (insert (mapconcat (lambda (p) (format "%s::%s" p fn)) pkgs " "))
+                                  (setq replaced-count (1+ replaced-count))
+                                  (setq done-choice t))
+                                 ((memq ch '(?n ?N ?\d))
+                                  (setq done-choice t))
+                                 ((= ch ?!)
+                                  (delete-region fn-beg fn-end)
+                                  (goto-char fn-beg)
+                                  (insert (mapconcat (lambda (p) (format "%s::%s" p fn)) pkgs " "))
+                                  (setq replaced-count (1+ replaced-count))
+                                  (setq auto-all t)
+                                  (setq done-choice t))
+                                 ((memq ch '(?q ?Q ?\e))
+                                  (setq quit-requested t)
+                                  (setq done-choice t))))))))
+                       (target-pkg
+                        (move-overlay ov fn-beg fn-end)
+                        (redisplay)
+                        (if auto-all
+                            (progn
+                              (goto-char fn-beg)
+                              (insert (format "%s::" target-pkg))
+                              (setq replaced-count (1+ replaced-count)))
+                          ;; Interactive prompt
+                          (let ((prompt (format "Prefix `%s' with `%s::'? [y]es, [n]o, [!]all, [q]uit: "
+                                                fn target-pkg))
+                                (done-choice nil))
+                            (while (not done-choice)
+                              (let ((ch (read-char-choice prompt '(?y ?Y ?\s ?n ?N ?\d ?! ?q ?Q ?\e))))
+                                (cond
+                                 ((memq ch '(?y ?Y ?\s))
+                                  (goto-char fn-beg)
+                                  (insert (format "%s::" target-pkg))
+                                  (setq replaced-count (1+ replaced-count))
+                                  (setq done-choice t))
+                                 ((memq ch '(?n ?N ?\d))
+                                  (setq done-choice t))
+                                 ((= ch ?!)
+                                  (goto-char fn-beg)
+                                  (insert (format "%s::" target-pkg))
+                                  (setq replaced-count (1+ replaced-count))
+                                  (setq auto-all t)
+                                  (setq done-choice t))
+                                 ((memq ch '(?q ?Q ?\e))
+                                  (setq quit-requested t)
+                                  (setq done-choice t)))))))))))
+                (move-overlay ov 1 1)
+                (goto-char next-pos)
+                (set-marker next-pos nil))))))
+      (delete-overlay ov)
+      (set-marker end-marker nil)
+      (message "[ESS] Done! Added namespaces to %d function call(s)%s."
+               replaced-count
+               (if quit-requested " (aborted by user)" "")))))
+
+;; Friendly aliases for M-x discovery
+(defalias 'ess-add-namespaces #'wz-ess-add-namespaces-in-region)
+(defalias 'wz-ess-add-namespaces #'wz-ess-add-namespaces-in-region)
 
 (defun wz-ess-insert-function-args (beg end)
   "This function inserts all arguments of a function call. When you mark
@@ -1352,6 +1657,8 @@ If the Python process is not running, start it and split window first."
         "C-,"         #'wz-ess-backward-break-line-here
         "C-."         #'wz-ess-forward-break-line-here
         "C-:"         #'wz-ess-find-and-insert-namespace
+        "C-M-:"       #'wz-ess-add-namespaces-in-region
+        "C-c C-e n"   #'wz-ess-add-namespaces-in-region
         "S-<f9>"      #'wz-ess-backward-R-assigment-symbol
         "S-<f10>"     #'wz-ess-forward-R-assigment-symbol
         "M-j"         #'wz-ess-newline-indented
