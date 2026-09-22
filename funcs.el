@@ -974,6 +974,118 @@ Warns if the `air` executable is missing."
 (defalias 'air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 (defalias 'wz-air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 
+;; --- Remark Formatter (Markdown / Quarto / Rmd) ----------------------
+;;
+;; Requirements & Setup:
+;; 1. Node.js & npm (v16+) installed on system.
+;;
+;; 2. Global packages for remark CLI and plugins:
+;;    $ npm install -g remark-cli remark-frontmatter remark-math remark-stringify
+;;
+;;    - remark-cli: The command-line interface (`remark`).
+;;    - remark-frontmatter: Preserves YAML frontmatter (metadata header)
+;;      in Markdown, Quarto (.qmd), and R Markdown (.rmd) documents.
+;;    - remark-math: Preserves and formats LaTeX math blocks ($...$ and $$...$$).
+;;    - remark-stringify: Markdown AST compiler.
+;;
+;; 3. Configuration file: `~/.remarkrc.json` (or `.remarkrc.json` in project root)
+;;    Sample ~/.remarkrc.json:
+;;    {
+;;      "plugins": [
+;;        "remark-frontmatter",
+;;        "remark-math"
+;;      ],
+;;      "settings": {
+;;        "setext": true,
+;;        "bullet": "-",
+;;        "rule": "-",
+;;        "fences": true,
+;;        "listItemIndent": "one",
+;;        "incrementListMarker": true,
+;;        "resourceLink": true
+;;      }
+;;    }
+;;
+;; 4. Safety & Polymode Compatibility:
+;;    - Fails silently and safely if `remark' is missing (executable-find).
+;;    - Resolves base buffer for Polymode (Quarto / Rmd indirect buffers).
+;;    - Interactive toggle: M-x remark-format-on-save-toggle.
+;;    - Interactive manual format: M-x remark-format-buffer.
+
+(defcustom wz-remark-format-on-save t
+  "If non-nil, automatically format Markdown, Quarto, and Rmd buffers on save using Remark CLI.
+Can be customized in `custom.el' or via M-x customize-variable."
+  :type 'boolean
+  :group 'markdown)
+
+(defun wz-remark-format-buffer ()
+  "Format the current Markdown, Quarto, or Rmd buffer using `remark` via stdin.
+Return t if formatting was applied successfully, nil otherwise.
+Does not fail if the `remark` executable is unavailable."
+  (interactive)
+  (if (not (executable-find "remark"))
+      (progn
+        (when (called-interactively-p 'interactive)
+          (message "[Remark] Warning: 'remark' executable was not found on system PATH."))
+        nil)
+    (let* ((target-buffer (or (buffer-base-buffer) (current-buffer))))
+      (with-current-buffer target-buffer
+        (let* ((file-path (or (buffer-file-name) "temp.md"))
+               (rc-file (expand-file-name "~/.remarkrc.json"))
+               (tmp-buffer (generate-new-buffer " *remark-formatted*"))
+               (args (list "-S"))
+               (exit-code nil))
+          (when (file-exists-p rc-file)
+            (setq args (append args (list "--rc-path" rc-file))))
+          (setq args (append args (list "--file-path" file-path)))
+          (unwind-protect
+              (progn
+                (setq exit-code
+                      (apply #'call-process-region
+                             (point-min) (point-max)
+                             "remark"
+                             nil (list tmp-buffer nil) nil
+                             args))
+                (if (= exit-code 0)
+                    (progn
+                      (replace-buffer-contents tmp-buffer)
+                      t)
+                  (message "[Remark] Formatting skipped due to syntax/parsing errors.")
+                  nil))
+            (kill-buffer tmp-buffer)))))))
+
+(defun wz-remark-format-on-save-maybe ()
+  "Execute `wz-remark-format-buffer` on save if `wz-remark-format-on-save`
+is non-nil and the `remark` executable is available on system PATH."
+  (when (and wz-remark-format-on-save
+             (executable-find "remark")
+             (not (and (bound-and-true-p apheleia-mode)
+                       (eq (bound-and-true-p +format-with) 'remark-markdown))))
+    (wz-remark-format-buffer)))
+
+;;;###autoload
+(defun remark-format-on-save-toggle (&optional global)
+  "Toggle automatic formatting on save with Remark in Markdown/Quarto/Rmd buffers.
+By default, toggles only for the current buffer.
+With prefix argument C-u (GLOBAL), toggles the global default for all buffers.
+Warns if the `remark` executable is missing."
+  (interactive "P")
+  (if (not (executable-find "remark"))
+      (message "[Remark] Warning: 'remark' executable was not found on system PATH.")
+    (if global
+        (progn
+          (setq-default wz-remark-format-on-save (not (default-value 'wz-remark-format-on-save)))
+          (setq wz-remark-format-on-save (default-value 'wz-remark-format-on-save))
+          (message "[Remark] Format-on-save GLOBAL: %s"
+                   (if (default-value 'wz-remark-format-on-save) "ENABLED (t)" "DISABLED (nil)")))
+      (setq-local wz-remark-format-on-save (not wz-remark-format-on-save))
+      (message "[Remark] Format-on-save for current BUFFER: %s"
+               (if wz-remark-format-on-save "ENABLED (t)" "DISABLED (nil)")))))
+
+;; Friendly aliases for M-x discovery
+(defalias 'remark-format-buffer #'wz-remark-format-buffer)
+(defalias 'wz-remark-format-on-save-toggle #'remark-format-on-save-toggle)
+
 ;; --- Section & Function Navigation (R) ---
 
 (defconst wz-r-section-regexp

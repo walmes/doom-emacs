@@ -369,6 +369,50 @@
         "C-c *" #'orgalist-cycle-bullet
         "<f10>" #'imenu-list-smart-toggle))
 
+;;--- Remark (Markdown / Quarto / Rmd Formatter CLI) --------------------
+;; Unified.js Remark: https://remark.js.org
+;; Functions implemented in `funcs.el' (Section 4. Remark Formatter).
+;; Interactive toggle: M-x remark-format-on-save-toggle.
+;; Manual format: M-x remark-format-buffer.
+;; Initial default value configured in `wz-remark-format-on-save' (t).
+
+(defun wz-remark-setup-format-on-save ()
+  "Setup Remark format-on-save buffer-locally if in md/qmd/rmd buffer."
+  (when (and (executable-find "remark")
+             (or (derived-mode-p 'markdown-mode 'gfm-mode)
+                 (bound-and-true-p poly-quarto-mode)
+                 (bound-and-true-p poly-markdown+r-mode)
+                 (memq major-mode '(poly-quarto-mode poly-markdown+r-mode poly-markdown-mode quarto-mode))
+                 (when-let* ((file (buffer-file-name)))
+                   (member (downcase (file-name-extension file)) '("md" "markdown" "rmd" "qmd")))))
+    (make-local-variable 'wz-remark-format-on-save)
+    (add-hook 'before-save-hook #'wz-remark-format-on-save-maybe nil t)))
+
+;; Hook into Markdown, Quarto, and Polymode modes, as well as file open
+(when (executable-find "remark")
+  (add-hook! '(markdown-mode-hook
+               gfm-mode-hook
+               quarto-mode-hook
+               poly-quarto-mode-hook
+               poly-markdown+r-mode-hook
+               poly-markdown-mode-hook)
+             #'wz-remark-setup-format-on-save)
+  (add-hook 'find-file-hook #'wz-remark-setup-format-on-save)
+
+  ;; Compatibility with Doom's :editor (format +onsave) / Apheleia if ever enabled
+  (when (fboundp 'set-formatter!)
+    (set-formatter! 'remark-markdown
+      '("remark"
+        "-S"
+        (when (file-exists-p (expand-file-name "~/.remarkrc.json"))
+          (list "--rc-path" (expand-file-name "~/.remarkrc.json"))))
+      :modes '(markdown-mode
+               gfm-mode
+               quarto-mode
+               poly-quarto-mode
+               poly-markdown+r-mode
+               poly-markdown-mode))))
+
 ;;--- ESSH (Emacs Speaks Statistics Shell) -----------------------------
 (use-package! essh
   :config
