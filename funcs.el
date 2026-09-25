@@ -1218,6 +1218,83 @@ export a function."
 
 ;; --- Air Formatter (R) ---
 
+;; --- Installer Helpers (Fonts, Formatters & Environments) ------------
+
+;;;###autoload
+(defun wz-install-icon-fonts ()
+  "Install official all-the-icons and nerd-icons fonts into the user font directory."
+  (interactive)
+  (message "[Icon Fonts] Installing all-the-icons fonts...")
+  (when (fboundp 'all-the-icons-install-fonts)
+    (all-the-icons-install-fonts t))
+  (message "[Icon Fonts] Installing nerd-icons fonts...")
+  (when (fboundp 'nerd-icons-install-fonts)
+    (nerd-icons-install-fonts t))
+  (message "[Icon Fonts] Font installation completed!"))
+
+;;;###autoload
+(defun wz-install-formatters ()
+  "Run ~/.doom.d/bin/install-formatters.sh asynchronously to install Panache/Air and link TOML configs."
+  (interactive)
+  (let ((script (expand-file-name "~/.doom.d/bin/install-formatters.sh")))
+    (if (not (file-executable-p script))
+        (message "[Formatters] Error: script %s is missing or not executable." script)
+      (message "[Formatters] Launching formatter installation and config setup...")
+      (async-shell-command script "*formatter-install*"))))
+
+;;;###autoload
+(defun wz-setup-r-env ()
+  "Run ~/.doom.d/bin/setup-r-env.sh asynchronously to install required R packages."
+  (interactive)
+  (let ((script (expand-file-name "~/.doom.d/bin/setup-r-env.sh")))
+    (if (not (file-executable-p script))
+        (message "[R Setup] Error: script %s is missing or not executable." script)
+      (message "[R Setup] Launching R environment setup...")
+      (async-shell-command script "*r-env-setup*"))))
+
+;;;###autoload
+(defun wz-setup-python-env ()
+  "Run ~/.doom.d/bin/setup-python-env.sh asynchronously to install Pyright & Ruff."
+  (interactive)
+  (let ((script (expand-file-name "~/.doom.d/bin/setup-python-env.sh")))
+    (if (not (file-executable-p script))
+        (message "[Python Setup] Error: script %s is missing or not executable." script)
+      (message "[Python Setup] Launching Python environment setup...")
+      (async-shell-command script "*python-env-setup*"))))
+
+;;;###autoload
+(defun wz-setup-all-env ()
+  "Setup full environment: icon fonts, CLI formatters (Panache/Air), R packages, and Python tooling."
+  (interactive)
+  (wz-install-icon-fonts)
+  (wz-install-formatters)
+  (wz-setup-r-env)
+  (wz-setup-python-env)
+  (message "[Environment Setup] All installation tasks launched successfully!"))
+
+;;;###autoload
+(defun wz-create-dir-locals ()
+  "Copy template dir-locals file (~/.doom.d/templates/dir-locals.el) to current project root as .dir-locals.el."
+  (interactive)
+  (let* ((template (expand-file-name "~/.doom.d/templates/dir-locals.el"))
+         (project-root (or (bound-and-true-p doom-project-root)
+                           (when (fboundp 'project-root)
+                             (when-let* ((proj (project-current)))
+                               (project-root proj)))
+                           default-directory))
+         (target (expand-file-name ".dir-locals.el" project-root)))
+    (if (not (file-exists-p template))
+        (message "[Dir-Locals] Error: template file %s not found." template)
+      (if (file-exists-p target)
+          (progn
+            (find-file target)
+            (message "[Dir-Locals] File .dir-locals.el already exists at %s" target))
+        (copy-file template target)
+        (find-file target)
+        (message "[Dir-Locals] Created .dir-locals.el in %s" project-root)))))
+
+;; --- Air R Formatter CLI ---------------------------------------------
+
 (defcustom wz-air-format-on-save t
   "If non-nil, automatically format R buffers on save using Air CLI.
 Can be customized in `custom.el' or via M-x customize-variable."
@@ -1229,26 +1306,34 @@ Can be customized in `custom.el' or via M-x customize-variable."
 Return t if formatting was applied successfully, nil otherwise.
 Does not fail if the `air` executable is unavailable."
   (interactive)
-  (when (and (derived-mode-p 'ess-r-mode)
-             (executable-find "air"))
-    (let* ((file-path (or (buffer-file-name) "temp.R"))
-           (tmp-buffer (generate-new-buffer " *air-formatted*"))
-           (exit-code nil))
-      (unwind-protect
-          (progn
-            (setq exit-code
-                  (call-process-region (point-min) (point-max)
-                                       "air"
-                                       nil (list tmp-buffer nil) nil
-                                       "format"
-                                       "--stdin-file-path" file-path))
-            (if (= exit-code 0)
-                (progn
-                  (replace-buffer-contents tmp-buffer)
-                  t)
-              (message "[Air] Formatting skipped due to syntax/parsing errors.")
-              nil))
-        (kill-buffer tmp-buffer)))))
+  (if (not (executable-find "air"))
+      (progn
+        (when (called-interactively-p 'interactive)
+          (if (y-or-n-p "[Air] Executable 'air' not found on PATH. Run installer script now?")
+              (wz-install-formatters)
+            (message "[Air] Warning: 'air' executable was not found on system PATH.")))
+        nil)
+    (when (derived-mode-p 'ess-r-mode)
+      (let* ((file-path (or (buffer-file-name) "temp.R"))
+             (tmp-buffer (generate-new-buffer " *air-formatted*"))
+             (exit-code nil))
+        (unwind-protect
+            (progn
+              (setq exit-code
+                    (call-process-region (point-min) (point-max)
+                                         "air"
+                                         nil (list tmp-buffer nil) nil
+                                         "format"
+                                         "--stdin-file-path" file-path))
+              (if (= exit-code 0)
+                  (progn
+                    (replace-buffer-contents tmp-buffer)
+                    (when (called-interactively-p 'interactive)
+                      (message "[Air] Buffer formatted successfully."))
+                    t)
+                (message "[Air] Formatting skipped due to syntax/parsing errors.")
+                nil))
+          (kill-buffer tmp-buffer))))))
 
 (defun wz-air-format-on-save-maybe ()
   "Execute `wz-air-format-buffer` on save if `wz-air-format-on-save`
@@ -1279,49 +1364,77 @@ Warns if the `air` executable is missing."
 (defalias 'air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 (defalias 'wz-air-format-on-save-toggle #'air-lsp-format-on-save-toggle)
 
-;; --- Remark Formatter (Markdown / Quarto / Rmd) ----------------------
+;; --- Markdown / Quarto / Rmd Formatter (Panache & Remark CLI) -------
 ;;
-;; Requirements & Setup:
-;; 1. Node.js & npm (v16+) installed on system.
+;; Dual formatter setup for Markdown (.md), Quarto (.qmd), and R Markdown (.rmd).
+;; Defaults to `panache` (v3.12.0+) with fallback/alternative `remark`.
 ;;
-;; 2. Global packages for remark CLI and plugins:
-;;    $ npm install -g remark-cli remark-frontmatter remark-math remark-stringify
+;; 1. Panache (default): Rust-based formatter for Quarto/Pandoc/Markdown.
+;;    CLI: `panache format --stdin-filename <path> -`
+;;    Config: `~/.config/panache/config.toml` (symlinked from ~/.doom.d/configs/panache.toml)
 ;;
-;;    - remark-cli: The command-line interface (`remark`).
-;;    - remark-frontmatter: Preserves YAML frontmatter (metadata header)
-;;      in Markdown, Quarto (.qmd), and R Markdown (.rmd) documents.
-;;    - remark-math: Preserves and formats LaTeX math blocks ($...$ and $$...$$).
-;;    - remark-stringify: Markdown AST compiler.
+;; 2. Remark (alternative): Node.js Unified.js Remark CLI.
+;;    CLI: `remark -S --file-path <path>`
+;;    Config: `~/.remarkrc.json`
 ;;
-;; 3. Configuration file: `~/.remarkrc.json` (or `.remarkrc.json` in project root)
-;;    Sample ~/.remarkrc.json:
-;;    {
-;;      "plugins": [
-;;        "remark-frontmatter",
-;;        "remark-math"
-;;      ],
-;;      "settings": {
-;;        "setext": true,
-;;        "bullet": "-",
-;;        "rule": "-",
-;;        "fences": true,
-;;        "listItemIndent": "one",
-;;        "incrementListMarker": true,
-;;        "resourceLink": true
-;;      }
-;;    }
-;;
-;; 4. Safety & Polymode Compatibility:
-;;    - Fails silently and safely if `remark' is missing (executable-find).
-;;    - Resolves base buffer for Polymode (Quarto / Rmd indirect buffers).
-;;    - Interactive toggle: M-x remark-format-on-save-toggle.
-;;    - Interactive manual format: M-x remark-format-buffer.
+;; Selection & Toggles:
+;; - Configurable variable: `wz-markdown-formatter` ('panache or 'remark).
+;; - Interactive switch: M-x markdown-select-formatter.
+;; - Interactive toggle: M-x markdown-format-on-save-toggle.
+;; - Manual formatting: M-x panache-format-buffer, M-x remark-format-buffer, M-x markdown-format-buffer.
+;; - Auto setup/installer: M-x wz-install-formatters.
 
-(defcustom wz-remark-format-on-save t
-  "If non-nil, automatically format Markdown, Quarto, and Rmd buffers on save using Remark CLI.
-Can be customized in `custom.el' or via M-x customize-variable."
+(defcustom wz-markdown-formatter 'panache
+  "Default CLI formatter for Markdown, Quarto, and Rmd buffers.
+Supported values are `panache' (default) and `remark'."
+  :type '(choice (const :tag "Panache (Rust, Quarto/Pandoc-native)" panache)
+                 (const :tag "Remark CLI (Node.js Unified.js)" remark))
+  :group 'markdown)
+
+(defcustom wz-markdown-format-on-save t
+  "If non-nil, automatically format Markdown, Quarto, and Rmd buffers on save.
+The formatter used depends on `wz-markdown-formatter'."
   :type 'boolean
   :group 'markdown)
+
+;; Backward compatibility alias
+(defvaralias 'wz-remark-format-on-save 'wz-markdown-format-on-save)
+
+(defun wz-panache-format-buffer ()
+  "Format the current Markdown, Quarto, or Rmd buffer using `panache` via stdin.
+Return t if formatting was applied successfully, nil otherwise.
+Does not fail if the `panache` executable is unavailable."
+  (interactive)
+  (if (not (executable-find "panache"))
+      (progn
+        (when (called-interactively-p 'interactive)
+          (if (y-or-n-p "[Panache] Executable 'panache' not found on PATH. Run installer script now?")
+              (wz-install-formatters)
+            (message "[Panache] Warning: 'panache' executable was not found on system PATH.")))
+        nil)
+    (let* ((target-buffer (or (buffer-base-buffer) (current-buffer))))
+      (with-current-buffer target-buffer
+        (let* ((file-path (or (buffer-file-name) "temp.qmd"))
+               (tmp-buffer (generate-new-buffer " *panache-formatted*"))
+               (args (list "format" "--stdin-filename" file-path "-"))
+               (exit-code nil))
+          (unwind-protect
+              (progn
+                (setq exit-code
+                      (apply #'call-process-region
+                             (point-min) (point-max)
+                             "panache"
+                             nil (list tmp-buffer nil) nil
+                             args))
+                (if (= exit-code 0)
+                    (progn
+                      (replace-buffer-contents tmp-buffer)
+                      (when (called-interactively-p 'interactive)
+                        (message "[Panache] Buffer formatted successfully."))
+                      t)
+                  (message "[Panache] Formatting skipped due to syntax/parsing errors.")
+                  nil))
+            (kill-buffer tmp-buffer)))))))
 
 (defun wz-remark-format-buffer ()
   "Format the current Markdown, Quarto, or Rmd buffer using `remark` via stdin.
@@ -1354,42 +1467,82 @@ Does not fail if the `remark` executable is unavailable."
                 (if (= exit-code 0)
                     (progn
                       (replace-buffer-contents tmp-buffer)
+                      (when (called-interactively-p 'interactive)
+                        (message "[Remark] Buffer formatted successfully."))
                       t)
                   (message "[Remark] Formatting skipped due to syntax/parsing errors.")
                   nil))
             (kill-buffer tmp-buffer)))))))
 
-(defun wz-remark-format-on-save-maybe ()
-  "Execute `wz-remark-format-buffer` on save if `wz-remark-format-on-save`
-is non-nil and the `remark` executable is available on system PATH."
-  (when (and wz-remark-format-on-save
-             (executable-find "remark")
-             (not (and (bound-and-true-p apheleia-mode)
-                       (eq (bound-and-true-p +format-with) 'remark-markdown))))
-    (wz-remark-format-buffer)))
+(defun wz-markdown-format-buffer ()
+  "Format current buffer using the active formatter in `wz-markdown-formatter`."
+  (interactive)
+  (pcase wz-markdown-formatter
+    ('panache (wz-panache-format-buffer))
+    ('remark  (wz-remark-format-buffer))
+    (_ (message "[Markdown Formatter] Unknown formatter '%s'. Supported: panache, remark."
+                wz-markdown-formatter))))
+
+(defun wz-markdown-format-on-save-maybe ()
+  "Execute formatting on save if `wz-markdown-format-on-save` is non-nil
+and the active formatter executable is available on system PATH."
+  (when wz-markdown-format-on-save
+    (let ((exec-name (symbol-name wz-markdown-formatter)))
+      (when (and (executable-find exec-name)
+                 (not (and (bound-and-true-p apheleia-mode)
+                           (memq (bound-and-true-p +format-with)
+                                 '(panache-markdown remark-markdown)))))
+        (wz-markdown-format-buffer)))))
+
+(defalias 'wz-remark-format-on-save-maybe #'wz-markdown-format-on-save-maybe)
 
 ;;;###autoload
-(defun remark-format-on-save-toggle (&optional global)
-  "Toggle automatic formatting on save with Remark in Markdown/Quarto/Rmd buffers.
-By default, toggles only for the current buffer.
-With prefix argument C-u (GLOBAL), toggles the global default for all buffers.
-Warns if the `remark` executable is missing."
+(defun markdown-select-formatter (&optional global)
+  "Interactively select the Markdown/Quarto/Rmd formatter CLI (`panache` or `remark`).
+With prefix argument C-u (GLOBAL), sets the default globally. Otherwise, sets for the current buffer."
   (interactive "P")
-  (if (not (executable-find "remark"))
-      (message "[Remark] Warning: 'remark' executable was not found on system PATH.")
+  (let* ((choices '("panache" "remark"))
+         (current (symbol-name (if global (default-value 'wz-markdown-formatter) wz-markdown-formatter)))
+         (choice (completing-read (format "Select Markdown Formatter [%s] (Current: %s): "
+                                         (if global "GLOBAL" "BUFFER") current)
+                                 choices nil t nil nil current))
+         (sym (intern choice)))
     (if global
         (progn
-          (setq-default wz-remark-format-on-save (not (default-value 'wz-remark-format-on-save)))
-          (setq wz-remark-format-on-save (default-value 'wz-remark-format-on-save))
-          (message "[Remark] Format-on-save GLOBAL: %s"
-                   (if (default-value 'wz-remark-format-on-save) "ENABLED (t)" "DISABLED (nil)")))
-      (setq-local wz-remark-format-on-save (not wz-remark-format-on-save))
-      (message "[Remark] Format-on-save for current BUFFER: %s"
-               (if wz-remark-format-on-save "ENABLED (t)" "DISABLED (nil)")))))
+          (setq-default wz-markdown-formatter sym)
+          (setq wz-markdown-formatter sym)
+          (message "[Markdown Formatter] GLOBAL formatter set to: %s" sym))
+      (setq-local wz-markdown-formatter sym)
+      (message "[Markdown Formatter] Current BUFFER formatter set to: %s" sym))))
+
+;;;###autoload
+(defun markdown-format-on-save-toggle (&optional global)
+  "Toggle automatic formatting on save in Markdown/Quarto/Rmd buffers.
+By default, toggles only for the current buffer.
+With prefix argument C-u (GLOBAL), toggles the global default for all buffers."
+  (interactive "P")
+  (let ((exec-name (symbol-name wz-markdown-formatter)))
+    (if (not (executable-find exec-name))
+        (message "[Markdown Formatter] Warning: '%s' executable was not found on system PATH." exec-name)
+      (if global
+          (progn
+            (setq-default wz-markdown-format-on-save (not (default-value 'wz-markdown-format-on-save)))
+            (setq wz-markdown-format-on-save (default-value 'wz-markdown-format-on-save))
+            (message "[Markdown Formatter] Format-on-save GLOBAL: %s (Formatter: %s)"
+                     (if (default-value 'wz-markdown-format-on-save) "ENABLED (t)" "DISABLED (nil)")
+                     wz-markdown-formatter))
+        (setq-local wz-markdown-format-on-save (not wz-markdown-format-on-save))
+        (message "[Markdown Formatter] Format-on-save for current BUFFER: %s (Formatter: %s)"
+                 (if wz-markdown-format-on-save "ENABLED (t)" "DISABLED (nil)")
+                 wz-markdown-formatter)))))
+
+(defalias 'remark-format-on-save-toggle #'markdown-format-on-save-toggle)
 
 ;; Friendly aliases for M-x discovery
+(defalias 'panache-format-buffer #'wz-panache-format-buffer)
 (defalias 'remark-format-buffer #'wz-remark-format-buffer)
-(defalias 'wz-remark-format-on-save-toggle #'remark-format-on-save-toggle)
+(defalias 'markdown-format-buffer #'wz-markdown-format-buffer)
+(defalias 'wz-remark-format-on-save-toggle #'markdown-format-on-save-toggle)
 
 ;; --- Section & Function Navigation (R) ---
 

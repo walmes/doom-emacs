@@ -1,0 +1,13 @@
+# Panache configuration file
+# Managed in ~/.doom.d/configs/panache.toml
+
+# Markdown flavor and line width
+flavor = "quarto"
+
+# Formatting style
+[format]
+line-width = 72
+
+# External code formatters (opt-in)
+[formatters]
+latex = "badness"           # Built-in preset

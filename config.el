@@ -368,49 +368,67 @@
         "C-c *" #'orgalist-cycle-bullet
         "<f10>" #'imenu-list-smart-toggle))
 
-;;--- Remark (Markdown / Quarto / Rmd Formatter CLI) --------------------
-;; Unified.js Remark: https://remark.js.org
-;; Functions implemented in `funcs.el' (Section 4. Remark Formatter).
-;; Interactive toggle: M-x remark-format-on-save-toggle.
-;; Manual format: M-x remark-format-buffer.
-;; Initial default value configured in `wz-remark-format-on-save' (t).
+;;--- Markdown / Quarto / Rmd Formatter CLI (Panache / Remark) ---------
+;; Panache (Default): https://github.com/jolars/panache (Rust, Pandoc/Quarto native)
+;;   Install Panache with: curl --proto '=https' --tlsv1.2 -sSf https://panache.bz/install | sh
+;;   Create global config file in ~/.config/panache/config.toml
+;; Remark: https://remark.js.org (Node.js Unified.js)
+;; Functions implemented in `funcs.el`.
+;; Interactive selection: M-x markdown-select-formatter
+;; Interactive toggle: M-x markdown-format-on-save-toggle
+;; Manual format: M-x panache-format-buffer, M-x remark-format-buffer, M-x markdown-format-buffer.
+;; Formatter choice configured in `wz-markdown-formatter` ('panache or 'remark).
 
-(defun wz-remark-setup-format-on-save ()
-  "Setup Remark format-on-save buffer-locally if in md/qmd/rmd buffer."
-  (when (and (executable-find "remark")
-             (or (derived-mode-p 'markdown-mode 'gfm-mode)
-                 (bound-and-true-p poly-quarto-mode)
-                 (bound-and-true-p poly-markdown+r-mode)
-                 (memq major-mode '(poly-quarto-mode poly-markdown+r-mode poly-markdown-mode quarto-mode))
-                 (when-let* ((file (buffer-file-name)))
-                   (member (downcase (file-name-extension file)) '("md" "markdown" "rmd" "qmd")))))
-    (make-local-variable 'wz-remark-format-on-save)
-    (add-hook 'before-save-hook #'wz-remark-format-on-save-maybe nil t)))
+(defun wz-markdown-setup-format-on-save ()
+  "Setup Markdown/Quarto/Rmd format-on-save buffer-locally."
+  (let ((exec-name (symbol-name (or (bound-and-true-p wz-markdown-formatter) 'panache))))
+    (when (and (executable-find exec-name)
+               (or (derived-mode-p 'markdown-mode 'gfm-mode)
+                   (bound-and-true-p poly-quarto-mode)
+                   (bound-and-true-p poly-markdown+r-mode)
+                   (memq major-mode '(poly-quarto-mode poly-markdown+r-mode poly-markdown-mode quarto-mode))
+                   (when-let* ((file (buffer-file-name)))
+                     (member (downcase (file-name-extension file)) '("md" "markdown" "rmd" "qmd")))))
+      (make-local-variable 'wz-markdown-format-on-save)
+      (add-hook 'before-save-hook #'wz-markdown-format-on-save-maybe nil t))))
+
+(defalias 'wz-remark-setup-format-on-save #'wz-markdown-setup-format-on-save)
 
 ;; Hook into Markdown, Quarto, and Polymode modes, as well as file open
-(when (executable-find "remark")
-  (add-hook! '(markdown-mode-hook
-               gfm-mode-hook
-               quarto-mode-hook
-               poly-quarto-mode-hook
-               poly-markdown+r-mode-hook
-               poly-markdown-mode-hook)
-             #'wz-remark-setup-format-on-save)
-  (add-hook 'find-file-hook #'wz-remark-setup-format-on-save)
+(add-hook! '(markdown-mode-hook
+             gfm-mode-hook
+             quarto-mode-hook
+             poly-quarto-mode-hook
+             poly-markdown+r-mode-hook
+             poly-markdown-mode-hook)
+           #'wz-markdown-setup-format-on-save)
+(add-hook 'find-file-hook #'wz-markdown-setup-format-on-save)
 
-  ;; Compatibility with Doom's :editor (format +onsave) / Apheleia if ever enabled
-  (when (fboundp 'set-formatter!)
-    (set-formatter! 'remark-markdown
-      '("remark"
-        "-S"
-        (when (file-exists-p (expand-file-name "~/.remarkrc.json"))
-          (list "--rc-path" (expand-file-name "~/.remarkrc.json"))))
-      :modes '(markdown-mode
-               gfm-mode
-               quarto-mode
-               poly-quarto-mode
-               poly-markdown+r-mode
-               poly-markdown-mode))))
+;; Compatibility with Doom's :editor (format +onsave) / Apheleia if ever enabled
+(when (fboundp 'set-formatter!)
+  (set-formatter! 'panache-markdown
+    '("panache"
+      "format"
+      "--stdin-filename" (or (buffer-file-name) "temp.qmd")
+      "-")
+    :modes '(markdown-mode
+             gfm-mode
+             quarto-mode
+             poly-quarto-mode
+             poly-markdown+r-mode
+             poly-markdown-mode))
+
+  (set-formatter! 'remark-markdown
+    '("remark"
+      "-S"
+      (when (file-exists-p (expand-file-name "~/.remarkrc.json"))
+        (list "--rc-path" (expand-file-name "~/.remarkrc.json"))))
+    :modes '(markdown-mode
+             gfm-mode
+             quarto-mode
+             poly-quarto-mode
+             poly-markdown+r-mode
+             poly-markdown-mode)))
 
 ;;--- ESSH (Emacs Speaks Statistics Shell) -----------------------------
 (use-package! essh
