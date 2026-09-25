@@ -92,22 +92,21 @@
 (global-whitespace-mode t)
 
 (custom-set-faces!
+  ;; '(whitespace-line
+  ;;   :background nil
+  ;;   :foreground "#f0c674"
+  ;;   :weight normal)
   '(fill-column-indicator
     :foreground "#3f444a"
     :background nil
-    :weight light)
-  '(whitespace-line
-    :background nil
-    :foreground "#f0c674"
-    :weight normal))
+    :weight light))
 
 ;; Whitespace Configuration for Programming & Config Modes
 (setq-hook! '(prog-mode-hook conf-mode-hook)
   display-fill-column-indicator-column fill-column
   whitespace-line-column fill-column
-  whitespace-style '(face lines-tail trailing tabs empty)
-  ;; whitespace-style '(face trailing tabs empty)
-  )
+  ;; whitespace-style '(face lines-tail trailing tabs empty)
+  whitespace-style '(face trailing tabs empty))
 
 ;; Whitespace Configuration for Data & Config Files
 (setq-hook! '(json-mode-hook
@@ -857,11 +856,11 @@
           ("IMPROVE"     . font-lock-constant-face)
 
           ;; 6. Tips & Informational Notes (Doc Face / Soft Blue)
-          ("NOTE"        . font-lock-doc-face)
-          ("INFO"        . font-lock-doc-face)
-          ("TIP"         . font-lock-doc-face)
-          ("TRICK"       . font-lock-doc-face)
-          ("EXPLANATION" . font-lock-doc-face)
+          ("NOTE"        . font-lock-keyword-face)
+          ("INFO"        . font-lock-keyword-face)
+          ("TIP"         . font-lock-keyword-face)
+          ("TRICK"       . font-lock-keyword-face)
+          ("EXPLANATION" . font-lock-keyword-face)
 
           ;; 7. Success / Completed (Green)
           ("DONE"        . success)
